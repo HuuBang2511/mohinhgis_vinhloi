@@ -9,14 +9,12 @@ app\widgets\maps\plugins\markercluster\MarkerClusterAsset::register($this);
 app\widgets\maps\plugins\leaflet_measure\LeafletMeasureAsset::register($this);
 app\widgets\maps\plugins\leafletlocate\LeafletLocateAsset::register($this);
 
-$this->title = 'Bản đồ GIS';
+$this->title = 'Bản đồ GIS - Dịch vụ đô thị';
 $this->params['hideHero'] = true;
 
 // Tạo URL cơ sở cho tất cả các trang chi tiết
 $vuViecDetailUrlBase = Url::to(['/quanly/vu-viec/view']);
-$nocGiaDetailUrlBase = Url::to(['/quanly/noc-gia/view']);
 $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
-$diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
@@ -26,6 +24,7 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
     :root {
@@ -78,7 +77,13 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
         display: flex; justify-content: space-between; align-items: center;
         padding: 10px 15px; border-bottom: 1px solid var(--border-color); flex-shrink: 0;
     }
-    .tabs-header img { width: auto; height: 40px; display: block; }
+    .header-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary-color);
+        line-height: 1.3;
+        flex: 1;
+    }
 
     .tab-buttons { display: flex; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
     .tab-button {
@@ -228,6 +233,31 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
     }
     /* --- Kết thúc CSS mới --- */
 
+    .report-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        text-decoration: none;
+        color: var(--text-color);
+        transition: background 0.2s, box-shadow 0.2s;
+        background: var(--background-color);
+    }
+    .report-card:hover {
+        background: var(--light-gray);
+        box-shadow: var(--shadow);
+    }
+    .report-icon {
+        width: 22px; height: 22px;
+        color: var(--primary-color);
+        flex-shrink: 0;
+    }
+    .report-card-title { font-weight: 600; font-size: 14px; }
+    .report-card-desc  { font-size: 12px; color: var(--text-light-color); margin-top: 2px; }
+
 
     @media screen and (max-width: 768px) {
         #tabs {
@@ -243,8 +273,8 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
 <div id="mapInfo">
     <div id="tabs">
         <div class="tabs-header">
-            <a href="<?= Yii::$app->homeUrl ?>" target="_blank">
-                <img src="https://gis.nongdanviet.net/resources/images/logo_map_vuviec.jpg" alt="Logo">
+            <a href="<?= Yii::$app->homeUrl ?>" target="_blank" style="display: flex; align-items: center; text-decoration: none;">
+                <div class="header-title">Bản đồ số dịch vụ đô thị<br><span style="font-size: 11px; font-weight: 500; color: var(--text-light-color);">Phường Cái Răng, TP. Cần Thơ</span></div>
             </a>
             <button id="back-to-map-mobile-btn"></button>
         </div>
@@ -252,6 +282,7 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
         <div class="tab-buttons">
             <button class="tab-button active" data-tab="layer">Lớp dữ liệu</button>
             <button class="tab-button" data-tab="info">Thông tin</button>
+            <button class="tab-button" data-tab="report">Cán bộ hiện trường/người dân</button>
         </div>
 
         <div id="layer-content" class="tab-content active">
@@ -294,215 +325,116 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
                                 <li class="layer-tree-item">
                                     <i data-lucide="road" class="icon"></i>
                                     <label>
-                                        <span>Giao thông</span>
+                                        <span>Đường giao thông</span>
                                         <input type="checkbox" data-layer-id="wmsGiaoThongLayer" data-layer-type="wms" data-z-index="445" 
-                                               data-wms-name="mohinhgis_pa05:giaothong" data-display-name="Giao thông" 
-                                               data-popup-fields='{"name": "Tên đường", "fclass": "Loại đường", "ref": "Số hiệu", "oneway": "Một chiều", "maxspeed": "Tốc độ"}'>
+                                               data-wms-name="mohinhgis_pa05:giaothong" data-display-name="Đường giao thông" 
+                                               data-popup-fields='{"name": "Tên đường", "fclass": "Loại đường"}'>
                                     </label>
                                 </li>
                                 <li class="layer-tree-item">
-                                    <i data-lucide="map" class="icon"></i>
+                                    <i data-lucide="waves" class="icon"></i>
                                     <label>
-                                        <span>Thủy hệ</span>
-                                        <input type="checkbox" data-layer-id="wmsThuyheLayer" data-layer-type="wms" data-z-index="500" 
-                                               data-wms-name="mohinhgis_pa05:thuyhe" data-display-name="Thủy hệ" 
-                                               data-popup-fields='{"name": "Tên"}'>
-                                    </label>
-                                </li>
-                                <li class="layer-tree-item">
-                                    <i data-lucide="building" class="icon"></i>
-                                    <label>
-                                        <span>Tòa nhà</span>
-                                        <input type="checkbox" data-layer-id="wmsBuildingLayer" data-layer-type="wms" data-z-index="460" 
-                                               data-wms-name="mohinhgis_pa05:buildings" data-display-name="Tòa nhà" 
-                                               data-popup-fields='{"fid" : "fid", "confidence" : "confidence"}'>
-                                    </label>
-                                </li>
-                                <li class="layer-tree-item">
-                                    <i data-lucide="map-pin-house" class="icon"></i>
-                                    <label>
-                                        <span>KTVHXH (POIs)</span>
-                                        <input type="checkbox" data-layer-id="wmsKtvhxhLayer" data-layer-type="wms" data-z-index="530" 
-                                               data-wms-name="mohinhgis_pa05:pois" data-display-name="KTVHXH" 
-                                               data-popup-fields='{"name": "Tên"}'>
+                                        <span>Đường thuỷ</span>
+                                        <input type="checkbox" data-layer-id="wmsDuongThuyLayer" data-layer-type="wms" data-z-index="500" 
+                                               data-wms-name="mohinhgis_pa05:duong_thuy" data-display-name="Đường thuỷ" 
+                                               data-popup-fields='{"ma_duong_thuy": "Mã", "ten": "Tên", "loai_hinh": "Loại hình", "chuc_nang": "Chức năng"}'>
                                     </label>
                                 </li>
                             </ul>
                         </details>
                     </li>
 
-                    <!-- NHÓM 2: DỮ LIỆU CHUYÊN ĐỀ ANTT -->
+                    <!-- NHÓM 2: DỊCH VỤ ĐÔ THỊ -->
                     <li>
                         <details open>
                             <summary>
-                                <i data-lucide="shield-check" class="icon"></i>
-                                Dữ liệu chuyên đề ANTT
+                                <i data-lucide="building-2" class="icon"></i>
+                                Dịch vụ đô thị
                             </summary>
                             <ul>
-                                <!-- 2.1 Lớp An ninh -->
-                                <li>
-                                    <details>
-                                        <summary><i data-lucide="lock" class="icon"></i> Lớp An ninh</summary>
-                                        <ul>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="focus" class="icon"></i>
-                                                <label>
-                                                    <span>Mục tiêu trọng điểm</span>
-                                                    <input type="checkbox" data-layer-id="wmsMucTieuTrongDiemLayer" data-layer-type="wms" data-z-index="562" 
-                                                           data-wms-name="mohinhgis_pa05:muctieu_trongdiem" data-display-name="Mục tiêu trọng điểm" 
-                                                           data-popup-fields='{"ten": "Tên mục tiêu", "loai_muctieu": "Loại mục tiêu", "dia_chi": "Địa chỉ", "trang_thai_an_ninh": "Trạng thái AN"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="shield-alert" class="icon"></i>
-                                                <label>
-                                                    <span>Khu vực phức tạp AN</span>
-                                                    <input type="checkbox" data-layer-id="wmsKhuVucPhucTapLayer" data-layer-type="wms" data-z-index="563" 
-                                                           data-wms-name="mohinhgis_pa05:khuvuc_phuctap_an_ninh" data-display-name="Khu vực phức tạp AN" 
-                                                           data-popup-fields='{"ten": "Tên khu vực", "loai_khuvuc": "Loại khu vực", "muc_do_phuctap": "Mức độ phức tạp"}'>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </details>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="trees" class="icon"></i>
+                                    <label>
+                                        <span>Cây xanh đô thị</span>
+                                        <input type="checkbox" data-layer-id="wmsCayXanhLayer" data-layer-type="wms" data-z-index="510" 
+                                               data-wms-name="mohinhgis_pa05:cay_xanh" data-display-name="Cây xanh đô thị" 
+                                               data-popup-fields='{"ma_cay": "Mã cây", "ten_cay": "Tên cây", "loai_hinh": "Loại hình", "tinh_trang": "Tình trạng"}'>
+                                    </label>
                                 </li>
-                                <!-- 2.2 Lớp Trật tự Xã hội -->
-                                <li>
-                                    <details>
-                                        <summary><i data-lucide="users" class="icon"></i> Lớp Trật tự Xã hội</summary>
-                                        <ul>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="store" class="icon"></i>
-                                                <label>
-                                                    <span>Cơ sở kinh doanh có ĐK</span>
-                                                    <input type="checkbox" data-layer-id="wmsCoSoKinhDoanhLayer" data-layer-type="wms" data-z-index="566" 
-                                                           data-wms-name="mohinhgis_pa05:cosokinhdoanh_codk" data-display-name="Cơ sở kinh doanh có ĐK" 
-                                                           data-popup-fields='{"ten_co_so": "Tên cơ sở", "loai_hinh_kinh_doanh": "Loại hình KD", "chu_so_huu": "Chủ sở hữu", "trang_thai_hoat_dong": "Trạng thái"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="ban" class="icon"></i>
-                                                <label>
-                                                    <span>Điểm tệ nạn XH</span>
-                                                    <input type="checkbox" data-layer-id="wmsDiemTeNanLayer" data-layer-type="wms" data-z-index="564" 
-                                                           data-wms-name="mohinhgis_pa05:diem_tenannxh" data-display-name="Điểm tệ nạn XH" 
-                                                           data-popup-fields='{"ten_diem": "Tên điểm", "loai_ten_nan": "Loại tệ nạn", "muc_do_nguy_co": "Mức độ", "tinh_trang_xu_ly": "Xử lý"}'>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </details>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="lightbulb" class="icon"></i>
+                                    <label>
+                                        <span>Chiếu sáng công cộng</span>
+                                        <input type="checkbox" data-layer-id="wmsChieuSangLayer" data-layer-type="wms" data-z-index="520" 
+                                               data-wms-name="mohinhgis_pa05:chieu_sang" data-display-name="Chiếu sáng" 
+                                               data-popup-fields='{"ma_cot": "Mã cột", "loai_den": "Loại đèn", "tinh_trang": "Tình trạng"}'>
+                                    </label>
                                 </li>
-                                <!-- 2.3 Lớp Quản lý Dân cư -->
-                                <li>
-                                    <details>
-                                        <summary><i data-lucide="home" class="icon"></i> Lớp Quản lý Dân cư</summary>
-                                        <ul>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="home" class="icon"></i>
-                                                <label>
-                                                    <span>Nóc gia</span>
-                                                    <input type="checkbox" data-layer-id="wmsNocgiaLayer" data-layer-type="wms" data-z-index="520" 
-                                                           data-wms-name="mohinhgis_pa05:noc_gia" data-display-name="Nóc gia" 
-                                                           data-popup-fields='{"so_nha": "Số nhà", "ten_duong" : "Tên đường"}'>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </details>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="droplet-off" class="icon"></i>
+                                    <label>
+                                        <span>Trạm/điểm thoát nước</span>
+                                        <input type="checkbox" data-layer-id="wmsTramThoatNuocLayer" data-layer-type="wms" data-z-index="530" 
+                                               data-wms-name="mohinhgis_pa05:tram_thoat_nuoc" data-display-name="Trạm/điểm thoát nước" 
+                                               data-popup-fields='{"ma_tram": "Mã trạm", "ten_tram": "Tên trạm", "loai_hinh": "Loại hình", "tinh_trang": "Tình trạng"}'>
+                                    </label>
                                 </li>
-                                <!-- 2.4 Lớp Tuần tra - Giám sát -->
-                                <li>
-                                    <details>
-                                        <summary><i data-lucide="camera" class="icon"></i> Lớp Tuần tra - Giám sát</summary>
-                                        <ul>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="camera" class="icon"></i>
-                                                <label>
-                                                    <span>Camera an ninh</span>
-                                                    <input type="checkbox" data-layer-id="wmsCameraAnNinhLayer" data-layer-type="wms" data-z-index="568" 
-                                                           data-wms-name="mohinhgis_pa05:camera_an_ninh" data-display-name="Camera an ninh" 
-                                                           data-popup-fields='{"ma_camera": "Mã camera", "ten_diem": "Tên điểm", "dia_chi": "Địa chỉ", "don_vi_quan_ly": "ĐV quản lý", "trang_thai": "Trạng thái", "nguon_du_lieu": "Nguồn dữ liệu"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="shield" class="icon"></i>
-                                                <label>
-                                                    <span>Chốt tuần tra</span>
-                                                    <input type="checkbox" data-layer-id="wmsChotTuanTraLayer" data-layer-type="wms" data-z-index="567" 
-                                                           data-wms-name="mohinhgis_pa05:chot_tuantre" data-display-name="Chốt tuần tra" 
-                                                           data-popup-fields='{"ten_chot": "Tên chốt", "loai_chot": "Loại chốt", "don_vi_phu_trach": "ĐV phụ trách", "gio_truc": "Giờ trực"}'>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </details>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="pipette" class="icon"></i>
+                                    <label>
+                                        <span>Tuyến cống thoát nước</span>
+                                        <input type="checkbox" data-layer-id="wmsTuyenCongThoatNuocLayer" data-layer-type="wms" data-z-index="525" 
+                                               data-wms-name="mohinhgis_pa05:tuyen_cong_thoat_nuoc" data-display-name="Tuyến cống thoát nước" 
+                                               data-popup-fields='{"ma_tuyen": "Mã tuyến", "ten_tuyen": "Tên tuyến", "loai_cong": "Loại cống"}'>
+                                    </label>
                                 </li>
-                                <!-- 2.5 Lớp Vụ việc -->
-                                <li>
-                                    <details>
-                                        <summary><i data-lucide="alert-triangle" class="icon"></i> Lớp Vụ việc</summary>
-                                        <ul>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="map-pin" class="icon"></i>
-                                                <label>
-                                                    <span>Vụ việc (Điểm WMS)</span>
-                                                    <input type="checkbox" data-layer-id="wmsVuviecLayer" data-layer-type="wms" data-z-index="550" 
-                                                           data-wms-name="mohinhgis_pa05:vu_viec" data-display-name="Vụ việc (Điểm WMS)" 
-                                                           data-popup-fields='{"ma_vu_viec": "Mã vụ việc", "tom_tat_noi_dung" : "Tóm tắt nội dung"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="siren" class="icon"></i>
-                                                <label>
-                                                    <span>Điểm nhạy cảm</span>
-                                                    <input type="checkbox" data-layer-id="wmsDiemnhaycamLayer" data-layer-type="wms" data-z-index="540" 
-                                                           data-wms-name="mohinhgis_pa05:diem_nhay_cam" data-display-name="Điểm nhạy cảm" 
-                                                           data-popup-fields='{"tenloaihinh": "Tên loại hình", "thongtin": "Thông tin"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="target" class="icon"></i>
-                                                <label>
-                                                    <span>Điểm trọng điểm</span>
-                                                    <input type="checkbox" data-layer-id="wmsDiemtrongdiemLayer" data-layer-type="wms" data-z-index="530" 
-                                                           data-wms-name="mohinhgis_pa05:diem_trong_diem" data-display-name="Điểm trọng điểm" 
-                                                           data-popup-fields='{"tenloaihinh": "Tên loại hình", "thongtin": "Thông tin"}'>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </details>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="trash-2" class="icon"></i>
+                                    <label>
+                                        <span>Điểm tập kết rác thải</span>
+                                        <input type="checkbox" data-layer-id="wmsDiemRacThaiLayer" data-layer-type="wms" data-z-index="540" 
+                                               data-wms-name="mohinhgis_pa05:diem_rac_thai" data-display-name="Điểm tập kết rác thải" 
+                                               data-popup-fields='{"ma_diem": "Mã điểm", "ten_diem": "Tên điểm", "loai_hinh": "Loại hình", "tinh_trang": "Tình trạng"}'>
+                                    </label>
                                 </li>
-                                <!-- 2.6 Lớp PCCC -->
-                                <li>
-                                    <details>
-                                        <summary><i data-lucide="flame" class="icon"></i> Lớp PCCC</summary>
-                                        <ul>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="hydrant" class="icon"></i>
-                                                <label>
-                                                    <span>Trụ nước PCCC</span>
-                                                    <input type="checkbox" data-layer-id="wmsTruNuocCccLayer" data-layer-type="wms" data-z-index="560" 
-                                                           data-wms-name="mohinhgis_pa05:tru_nuoc_ccc" data-display-name="Trụ nước PCCC" 
-                                                           data-popup-fields='{"ma_tru": "Mã trụ", "tinh_trang": "Tình trạng", "ap_suat_psi": "Áp suất (PSI)"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="droplet" class="icon"></i>
-                                                <label>
-                                                    <span>Nguồn nước PCCC</span>
-                                                    <input type="checkbox" data-layer-id="wmsNguonNuocCccLayer" data-layer-type="wms" data-z-index="561" 
-                                                           data-wms-name="mohinhgis_pa05:nguon_nuoc_ccc" data-display-name="Nguồn nước PCCC" 
-                                                           data-popup-fields='{"ten_nguon": "Tên nguồn", "loai_nguon": "Loại nguồn", "dung_tich_m3": "Dung tích (m³)"}'>
-                                                </label>
-                                            </li>
-                                            <li class="layer-tree-item">
-                                                <i data-lucide="flame" class="icon"></i>
-                                                <label>
-                                                    <span>Cơ sở nguy cơ cháy nổ</span>
-                                                    <input type="checkbox" data-layer-id="wmsCoSoChayNoLayer" data-layer-type="wms" data-z-index="565" 
-                                                           data-wms-name="mohinhgis_pa05:cosonguyco_chayno" data-display-name="Cơ sở nguy cơ cháy nổ" 
-                                                           data-popup-fields='{"ten_co_so": "Tên cơ sở", "loai_hinh": "Loại hình", "muc_do_nguy_co": "Mức độ nguy cơ"}'>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </details>
+                            </ul>
+                        </details>
+                    </li>
+
+                    <!-- NHÓM 3: AN NINH & SỰ CỐ -->
+                    <li>
+                        <details open>
+                            <summary>
+                                <i data-lucide="shield-alert" class="icon"></i>
+                                An ninh & Sự cố
+                            </summary>
+                            <ul>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="camera" class="icon"></i>
+                                    <label>
+                                        <span>Camera an ninh</span>
+                                        <input type="checkbox" data-layer-id="wmsCameraAnNinhLayer" data-layer-type="wms" data-z-index="568" 
+                                               data-wms-name="mohinhgis_pa05:camera_an_ninh" data-display-name="Camera an ninh" 
+                                               data-popup-fields='{"ma_camera": "Mã camera", "ten_diem": "Tên điểm", "dia_chi": "Địa chỉ", "trang_thai": "Trạng thái"}'>
+                                    </label>
+                                </li>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="map-pin" class="icon"></i>
+                                    <label>
+                                        <span>Phản ánh sự cố (Vụ việc)</span>
+                                        <input type="checkbox" data-layer-id="wmsVuviecLayer" data-layer-type="wms" data-z-index="550" 
+                                               data-wms-name="mohinhgis_pa05:vu_viec" data-display-name="Phản ánh sự cố" 
+                                               data-popup-fields='{"ma_vu_viec": "Mã vụ việc", "tom_tat_noi_dung": "Tóm tắt nội dung"}'>
+                                    </label>
+                                </li>
+                                <li class="layer-tree-item">
+                                    <i data-lucide="siren" class="icon"></i>
+                                    <label>
+                                        <span>Điểm nhạy cảm</span>
+                                        <input type="checkbox" data-layer-id="wmsDiemnhaycamLayer" data-layer-type="wms" data-z-index="540" 
+                                               data-wms-name="mohinhgis_pa05:diem_nhay_cam" data-display-name="Điểm nhạy cảm" 
+                                               data-popup-fields='{"tenloaihinh": "Tên loại hình", "thongtin": "Thông tin"}'>
+                                    </label>
                                 </li>
                             </ul>
                         </details>
@@ -515,6 +447,37 @@ $diemTrongDiemDetailUrlBase = Url::to(['/quanly/diem-trong-diem/view']);
         <div id="info-content" class="tab-content">
             <div class="section-title">Thông tin chi tiết</div>
             <div id="feature-details"><p>Nhấn vào một đối tượng trên bản đồ để xem thông tin.</p></div>
+        </div>
+        <div id="report-content" class="tab-content">
+            <div class="section-title">Tham gia bản đồ số</div>
+            <p style="font-size:13px; color:var(--text-light-color); margin-bottom:1rem;">
+                Chọn loại thông tin bạn muốn báo cáo. Không cần đăng nhập.
+            </p>
+
+            <a href="<?= Url::to(['/quanly/diem-nhay-cam/create', 'ref' => 'map']) ?>" class="report-card">
+                <i data-lucide="alert-triangle" class="report-icon"></i>
+                <div>
+                    <div class="report-card-title">Điểm phản ánh của dân</div>
+                    <div class="report-card-desc">Báo cáo khu vực nhạy cảm cần chú ý</div>
+                </div>
+                <i data-lucide="chevron-right" style="margin-left:auto; flex-shrink:0;"></i>
+            </a>
+
+            <!-- QR Code nằm trong tab, tự động hiện -->
+            <div style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px; text-align:center;">
+                <p style="font-size:13px; font-weight:600; margin:0 0 12px; color:var(--text-color);">
+                    <i data-lucide="qr-code" style="width:15px;height:15px;vertical-align:middle;margin-right:5px;"></i>
+                    Quét QR để truy cập bản đồ
+                </p>
+                <div id="qr-canvas" style="display:inline-block; padding:10px; background:#fff; border:1px solid var(--border-color); border-radius:10px; margin-bottom:12px;"></div>
+                <p id="qr-url-text" style="font-size:11px; color:var(--text-light-color); word-break:break-all; margin:0 0 12px; padding:8px; background:var(--light-gray); border-radius:6px;"></p>
+                <button onclick="App.UI.downloadQR()" style="
+                    width:100%; padding:9px; background:var(--primary-color); color:white;
+                    border:none; border-radius:8px; cursor:pointer; font-size:13px; font-weight:500;
+                    display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <i data-lucide="download" style="width:15px;height:15px;"></i> Tải QR Code (PNG)
+                </button>
+            </div>
         </div>
     </div>
 
@@ -533,10 +496,9 @@ document.addEventListener('DOMContentLoaded', function () {
         GEOJSON_VUVEC_URL: 'http://103.9.77.141:8080/geoserver/mohinhgis_vinhlong/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mohinhgis_pa05%3Avu_viec&maxFeatures=5000&outputFormat=application%2Fjson',
         DETAIL_URLS: {
             vuViec: '<?= $vuViecDetailUrlBase ?>',
-            nocGia: '<?= $nocGiaDetailUrlBase ?>',
             diemNhayCam: '<?= $diemNhayCamDetailUrlBase ?>',
-            diemTrongDiem: '<?= $diemTrongDiemDetailUrlBase ?>',
         },
+        FILES_API_URL: '<?= Yii::$app->urlManager->createUrl(["/quanly/map/get-files"]) ?>',
         MAP_CENTER: [9.990668, 105.754463],
         MAP_ZOOM: 14,
         
@@ -547,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function () {
         init() {
             this.UI.init();
             this.Map.init();
-            this.Layers.init(); // Sẽ gọi this.Layers.buildLayersFromDOM()
+            this.Layers.init();
             this.Events.init();
             lucide.createIcons();
         },
@@ -559,8 +521,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 L.control.zoom({ position: 'topright' }).addTo(App.map);
 
                 const baseMaps = {
-                    "Bản đồ Google": L.tileLayer('https://{s}.google.com/vt/lyrs=r&x={x}&y={y}&z={z}', { maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] }).addTo(App.map),
-                    "Ảnh vệ tinh": L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] })
+                    "Bản đồ Google": L.tileLayer('https://{s}.google.com/vt/lyrs=r&x={x}&y={y}&z={z}', { maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], opacity: 0.7 }).addTo(App.map),
+                    "Ảnh vệ tinh": L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], opacity: 0.7 })
                 };
 
                 App.map.createPane('highlightPane').style.zIndex = 700;
@@ -592,20 +554,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         },
 
-        // --- MODULE QUẢN LÝ LỚP DỮ LIỆU (ĐÃ CẬP NHẬT) ---
+        // --- MODULE QUẢN LÝ LỚP DỮ LIỆU ---
         Layers: {
-            registry: {}, // Sẽ lưu trữ config đọc từ DOM
+            registry: {},
             
             async init() {
                 App.UI.setLoading(true);
                 try {
-                    // 1. Vẫn tải data cho lớp cluster/heatmap (nếu dùng)
                     await this.fetchVuViecData(); 
-                    
-                    // 2. Đọc config từ HTML và tạo layer
                     this.buildLayersFromDOM();
-                    
-                    // 3. Xây dựng chú giải (legend)
                     App.UI.buildLegend();
                 } catch (error) {
                     console.error("Lỗi nghiêm trọng khi khởi tạo lớp dữ liệu:", error);
@@ -615,14 +572,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
 
-            // HÀM MỚI: Đọc config từ data-* attribute của HTML
             buildLayersFromDOM() {
                 document.querySelectorAll('#layer-control input[type="checkbox"]').forEach(el => {
                     const cfg = el.dataset;
                     const layerId = cfg.layerId;
                     if (!layerId) return;
 
-                    // Lưu config vào registry
                     const config = {
                         id: layerId,
                         type: cfg.layerType,
@@ -634,8 +589,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         defaultVisible: el.checked
                     };
                     App.Layers.registry[layerId] = config;
-
-                    // Tạo layer Leaflet tương ứng
                     this.createLayer(config);
                 });
             },
@@ -649,12 +602,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     App.vuViecGeoJsonData = await response.json();
                 } catch (error) {
                     console.error('Lỗi tải dữ liệu GeoJSON Vụ việc:', error);
-                    // Ném lỗi ra ngoài để khối try...catch bên ngoài có thể bắt được
                     throw error;
                 }
             },
             
-            // Hàm này giữ nguyên logic, chỉ là nguồn 'config' giờ đến từ 'registry'
             createLayer(config) {
                 let layer;
                 switch(config.type) {
@@ -667,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     case 'heatmap':
                          if (App.vuViecGeoJsonData && App.vuViecGeoJsonData.features) {
                             const heatPoints = App.vuViecGeoJsonData.features
-                                .filter(f => f.geometry && f.geometry.coordinates) // Kiểm tra dữ liệu hợp lệ
+                                .filter(f => f.geometry && f.geometry.coordinates)
                                 .map(f => [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
                             layer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 18 });
                         }
@@ -675,13 +626,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     case 'cluster':
                          if (App.vuViecGeoJsonData && App.vuViecGeoJsonData.features) {
                             layer = L.markerClusterGroup();
-                            // Lọc các đối tượng có geometry hợp lệ
                             const validFeatures = App.vuViecGeoJsonData.features.filter(f => f.geometry && f.geometry.coordinates);
                             const geoJsonLayer = L.geoJSON({type: 'FeatureCollection', features: validFeatures}, {
                                 onEachFeature: (feature, marker) => {
                                     marker.on('click', () => {
                                         App.UI.displayFeatureInfo(feature, config);
-                                        App.UI.openTab('info'); // <-- ĐÃ THÊM
+                                        App.UI.openTab('info');
                                         App.leafletLayers.highlight.clearLayers().addData(feature);
                                     });
                                 }
@@ -703,7 +653,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 else App.map.removeLayer(layer);
             },
 
-            // Hàm này giữ nguyên từ file gốc
             filterClusterLayer(searchText) {
                 const clusterLayer = App.leafletLayers.clusterVuviecLayer;
                 if (!clusterLayer || !App.vuViecGeoJsonData) return;
@@ -718,12 +667,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const newGeoJsonLayer = L.geoJSON({ type: 'FeatureCollection', features: filteredData }, {
                     onEachFeature: (feature, marker) => {
                         marker.on('click', () => {
-                            // Logic này đã bị hỏng vì 'this.config' không còn, 
-                            // và clusterVuviecLayer không có trong registry.
-                            // Để nguyên vì nó không được sử dụng.
-                            // App.UI.displayFeatureInfo(feature, this.config.find(c => c.id === 'clusterVuviecLayer'));
-                            
-                            // App.UI.openTab('info'); // Đã thêm ở hàm createLayer
                             App.leafletLayers.highlight.clearLayers().addData(feature);
                         });
                     }
@@ -732,13 +675,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         },
         
-        // --- MODULE QUẢN LÝ GIAO DIỆN (ĐÃ CẬP NHẬT) ---
+        // --- MODULE QUẢN LÝ GIAO DIỆN ---
         UI: {
             init() {
-                 this.fixMobileHeight();
+                this.fixMobileHeight();
                 document.getElementById('toggle-tab-btn').innerHTML = `<i data-lucide="menu"></i>`;
                 document.getElementById('back-to-map-mobile-btn').innerHTML = `<i data-lucide="x"></i>`;
                 if (window.innerWidth <= 768) this.toggleTabPanel(false);
+                this.renderQRCode();
             },
             fixMobileHeight: () => {
                 const setAppHeight = () => document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
@@ -747,12 +691,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 setAppHeight();
             },
 
-            // THAY THẾ HÀM buildLayerControl bằng buildLegend
             buildLegend() {
                 if (!this.legendContainer) return;
                 let legendHtml = '<h4>Chú giải</h4>';
                 
-                // Đọc từ registry thay vì config
                 for (const layerId in App.Layers.registry) {
                     const config = App.Layers.registry[layerId];
                     if (config.type === 'wms') {
@@ -766,10 +708,10 @@ document.addEventListener('DOMContentLoaded', function () {
             displayFeatureInfo(feature, config) {
                 const props = feature.properties;
                 let content = `<div class='popup-content'><h4>${config.displayName}</h4><table>`;
-                
+
                 let fields = config.popupFields || {};
                 if (config.type === 'cluster') {
-                    fields = {'ma_vu_viec': 'Mã vụ việc', 'tom_tat_noi_dung' : 'Tóm tắt nội dung', 'dia_chi_su_viec': 'Địa chỉ'};
+                    fields = {'ma_vu_viec': 'Mã vụ việc', 'tom_tat_noi_dung': 'Tóm tắt nội dung', 'dia_chi_su_viec': 'Địa chỉ'};
                 }
 
                 for (const key in fields) {
@@ -777,45 +719,110 @@ document.addEventListener('DOMContentLoaded', function () {
                         content += `<tr><th>${fields[key]}</th><td>${props[key] || 'Không có'}</td></tr>`;
                     }
                 }
-                content += "</table>";
+                content += `</table>`;
 
-                let detailUrl = '';
-                const featureId = feature.id; 
-                const numericId = featureId ? featureId.split('.').pop() : null;
+                // --- Map layer ID → detail URL key + files API layer key ---
+                const layerDetailMap = {
+                    'wmsVuviecLayer':              { urlKey: 'vuViec',     filesKey: null },
+                    'clusterVuviecLayer':           { urlKey: 'vuViec',     filesKey: null },
+                    'wmsDiemnhaycamLayer':          { urlKey: 'diemNhayCam', filesKey: null },
+                    'wmsDiemRacThaiLayer':          { urlKey: null,         filesKey: 'diemRacThai' },
+                    'wmsCayXanhLayer':              { urlKey: null,         filesKey: 'cayXanh' },
+                    'wmsChieuSangLayer':            { urlKey: null,         filesKey: 'chieuSang' },
+                    'wmsTramThoatNuocLayer':        { urlKey: null,         filesKey: 'tramThoatNuoc' },
+                    'wmsTuyenCongThoatNuocLayer':   { urlKey: null,         filesKey: 'tuyenCongThoatNuoc' },
+                    'wmsDuongThuyLayer':            { urlKey: null,         filesKey: 'duongThuy' },
+                    'wmsCameraAnNinhLayer':         { urlKey: null,         filesKey: 'cameraAnNinh' },
+                };
 
-                if (numericId && !isNaN(numericId)) {
-                    // Dùng config.id (từ registry) để quyết định URL
-                    switch (config.id) {
-                        case 'wmsVuviecLayer':
-                        case 'clusterVuviecLayer':
-                            detailUrl = `${App.DETAIL_URLS.vuViec}?id=${numericId}`;
-                            break;
-                        case 'wmsNocgiaLayer':
-                            detailUrl = `${App.DETAIL_URLS.nocGia}?id=${numericId}`;
-                            break;
-                        case 'wmsDiemnhaycamLayer':
-                            detailUrl = `${App.DETAIL_URLS.diemNhayCam}?id=${numericId}`;
-                            break;
-                        case 'wmsDiemtrongdiemLayer':
-                            detailUrl = `${App.DETAIL_URLS.diemTrongDiem}?id=${numericId}`;
-                            break;
-                        // TODO: Thêm case cho các layer mới nếu chúng có trang chi tiết
-                    }
-                }
+                const featureId  = feature.id;
+                const numericId  = featureId ? featureId.split('.').pop() : null;
+                const layerCfg   = layerDetailMap[config.id] || {};
+                const detailUrl  = (numericId && !isNaN(numericId) && layerCfg.urlKey)
+                    ? `${App.DETAIL_URLS[layerCfg.urlKey]}?id=${numericId}` : '';
+                const filesKey   = layerCfg.filesKey || null;
 
+                // --- Nút Xem chi tiết ---
                 if (detailUrl) {
                     content += `
-                        <div style="margin-top: 15px; text-align: right;">
+                        <div style="margin-top:15px; text-align:right;">
                             <a href="${detailUrl}" target="_blank" class="detail-button">
                                 <i data-lucide="external-link" class="icon"></i> Xem chi tiết
                             </a>
-                        </div>
-                    `;
+                        </div>`;
                 }
 
-                content += "</div>";
+                // --- Khu vực ảnh đính kèm (placeholder, sẽ được load async) ---
+                if (filesKey && numericId && !isNaN(numericId)) {
+                    content += `<div id="attachment-section" style="margin-top:14px;">
+                        <div style="font-size:12px;color:var(--text-light-color);">
+                            <i data-lucide="loader" style="width:14px;height:14px;animation:spin 1s linear infinite;vertical-align:middle;"></i>
+                            Đang tải file đính kèm...
+                        </div>
+                    </div>`;
+                }
+
+                content += `</div>`;
                 document.getElementById('feature-details').innerHTML = content;
                 lucide.createIcons();
+
+                // --- Fetch file đính kèm async ---
+                if (filesKey && numericId && !isNaN(numericId)) {
+                    fetch(`${App.FILES_API_URL}?layer=${filesKey}&id=${numericId}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const section = document.getElementById('attachment-section');
+                            if (!section) return;
+                            if (!data.success || data.files.length === 0) {
+                                section.innerHTML = `<p style="font-size:12px;color:var(--text-light-color);margin:0;">Không có file đính kèm.</p>`;
+                                return;
+                            }
+                            let html = `<div style="font-size:12px;font-weight:600;color:var(--text-color);margin-bottom:8px;">
+                                📎 File đính kèm (${data.files.length})
+                            </div>`;
+
+                            // Ảnh — hiển thị dạng lưới
+                            const images = data.files.filter(f => f.isImage);
+                            const others = data.files.filter(f => !f.isImage);
+
+                            if (images.length > 0) {
+                                html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-bottom:8px;">`;
+                                images.forEach(f => {
+                                    html += `<a href="${f.url}" target="_blank" style="display:block;border-radius:6px;overflow:hidden;border:1px solid var(--border-color);">
+                                        <img src="${f.url}" alt="${f.name}" 
+                                             style="width:100%;height:70px;object-fit:cover;display:block;"
+                                             onerror="this.parentElement.style.display='none'">
+                                    </a>`;
+                                });
+                                html += `</div>`;
+                            }
+
+                            // File khác — danh sách link
+                            if (others.length > 0) {
+                                others.forEach(f => {
+                                    html += `<a href="${f.url}" target="_blank" 
+                                               style="display:flex;align-items:center;gap:6px;padding:6px 8px;
+                                                      border:1px solid var(--border-color);border-radius:6px;
+                                                      text-decoration:none;color:var(--text-color);font-size:12px;
+                                                      margin-bottom:5px;transition:background 0.2s;"
+                                               onmouseover="this.style.background='var(--light-gray)'"
+                                               onmouseout="this.style.background=''"
+                                            >
+                                        <i data-lucide="file" style="width:14px;height:14px;flex-shrink:0;color:var(--primary-color);"></i>
+                                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
+                                        <i data-lucide="download" style="width:12px;height:12px;margin-left:auto;flex-shrink:0;color:var(--text-light-color);"></i>
+                                    </a>`;
+                                });
+                            }
+
+                            section.innerHTML = html;
+                            lucide.createIcons();
+                        })
+                        .catch(() => {
+                            const section = document.getElementById('attachment-section');
+                            if (section) section.innerHTML = `<p style="font-size:12px;color:#ef4444;margin:0;">Lỗi tải file đính kèm.</p>`;
+                        });
+                }
             },
             
             setLoading(isLoading) { 
@@ -838,18 +845,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 tabs.classList.toggle(isMobile ? 'active' : 'hidden', isMobile ? show : !show);
                 setTimeout(() => App.map.invalidateSize(), 300);
              },
-            toggleLegend() { 
+            toggleLegend() {
                 const legend = this.legendContainer;
                 legend.style.display = (legend.style.display === 'none' || legend.style.display === '') ? 'block' : 'none';
-             }
+            },
+
+            renderQRCode() {
+                const container = document.getElementById('qr-canvas');
+                const urlText = document.getElementById('qr-url-text');
+                if (!container) return;
+                const publicUrl = '<?= Yii::$app->urlManager->createAbsoluteUrl(['/quanly/map/vuviec']) ?>';
+                if (urlText) urlText.textContent = publicUrl;
+                container.innerHTML = '';
+                new QRCode(container, {
+                    text: publicUrl,
+                    width: 180,
+                    height: 180,
+                    colorDark: '#1e293b',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                lucide.createIcons();
+            },
+
+            downloadQR() {
+                const canvas = document.querySelector('#qr-canvas canvas');
+                const img = document.querySelector('#qr-canvas img');
+                let dataUrl;
+                if (canvas) dataUrl = canvas.toDataURL('image/png');
+                else if (img) dataUrl = img.src;
+                else return;
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'qrcode-bandodso.png';
+                a.click();
+            },
         },
         
-        // --- MODULE QUẢN LÝ SỰ KIỆN (ĐÃ CẬP NHẬT onMapClick) ---
+        // --- MODULE QUẢN LÝ SỰ KIỆN ---
         Events: {
             init() {
-                App.map.on('click', this.onMapClick); // Logic click được cập nhật
+                App.map.on('click', this.onMapClick);
                 
-                // Listener này vẫn hoạt động vì nó dựa trên data-layer-id
                 document.getElementById('layer-control').addEventListener('change', e => {
                     if (e.target.matches('input[type="checkbox"]')) {
                         App.Layers.toggle(e.target.dataset.layerId, e.target.checked);
@@ -865,17 +902,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('back-to-map-mobile-btn').addEventListener('click', () => App.UI.toggleTabPanel(false));
             },
 
-            // CẬP NHẬT onMapClick để dùng Layers.registry
             async onMapClick(e) {
                 const point = App.map.latLngToContainerPoint(e.latlng, App.map.getZoom());
                 const size = App.map.getSize();
                 const bbox = App.map.getBounds().toBBoxString();
 
-                // Lọc các layer WMS đang hiển thị
                 const visibleWmsLayers = Object.keys(App.leafletLayers)
                     .filter(id => App.map.hasLayer(App.leafletLayers[id]) && App.Layers.registry[id] && App.Layers.registry[id].type === 'wms')
-                    .map(id => App.Layers.registry[id]) // Lấy config từ registry
-                    .sort((a, b) => b.zIndex - a.zIndex); // Sắp xếp theo zIndex
+                    .map(id => App.Layers.registry[id])
+                    .sort((a, b) => b.zIndex - a.zIndex);
                 
                 if (visibleWmsLayers.length === 0) return;
 
@@ -888,10 +923,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         const response = await fetch(url);
                         const data = await response.json();
                         if (data.features && data.features.length > 0) {
-                            App.UI.displayFeatureInfo(data.features[0], config); // config đã có sẵn popupFields
-                            App.UI.openTab('info'); // <-- ĐÃ THÊM
+                            App.UI.displayFeatureInfo(data.features[0], config);
+                            App.UI.openTab('info');
                             App.leafletLayers.highlight.addData(data.features[0]);
-                            return; // Dừng lại ở lớp đầu tiên tìm thấy
+                            return;
                         }
                     } catch (error) {
                         console.error(`Lỗi GetFeatureInfo lớp ${config.displayName}:`, error);
@@ -905,5 +940,3 @@ document.addEventListener('DOMContentLoaded', function () {
     App.init();
 });
 </script>
-
-
