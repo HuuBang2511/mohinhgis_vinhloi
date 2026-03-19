@@ -1,7 +1,7 @@
 <?php
 
 namespace app\modules\quanly\models;
-
+use app\modules\quanly\base\QuanlyBaseModel;
 use Yii;
 
 /**
