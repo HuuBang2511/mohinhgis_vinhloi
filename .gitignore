@@ -40,5 +40,5 @@ tests/_support/_generated
 **/node_modules
 /runtime
 
-/web/uploads
+
 config/db.php
