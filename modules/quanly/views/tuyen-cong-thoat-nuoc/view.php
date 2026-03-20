@@ -51,8 +51,20 @@ $this->params['breadcrumbs'][] = $this->title;
                         'model' => $model,
                         'options' => ['class' => 'table table-hover mb-0 detail-view-custom'],
                         'attributes' => [
-                            
-                            
+                            'ma_tuyen',
+                            'ten_tuyen',
+                            'loai_cong',
+                            'chieu_dai_m',
+                            'duong_kinh_mm',
+                            'do_doc_phan_tram',
+                            'vat_lieu',
+                            'nam_xay_dung',
+                            'loai_thoat_nuoc',
+                            'tinh_trang',
+                            'diem_dau_id',
+                            'diem_cuoi_id',
+                            'don_vi_quan_ly',
+                            'ghi_chu',
                         ],
                     ]) ?>
                 </div>

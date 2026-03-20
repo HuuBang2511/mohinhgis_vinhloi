@@ -122,8 +122,6 @@ class DiemRacThaiSearch extends DiemRacThai
         'hay_bi_qua_tai',
         'khoang_cach_dan_cu_m',
         'phan_anh_mui',
-        'phuong_xa',
-        'quan_huyen',
         'dia_chi_cu_the',
         'don_vi_quan_ly',
         'ghi_chu',

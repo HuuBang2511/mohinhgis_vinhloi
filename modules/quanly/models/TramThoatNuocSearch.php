@@ -117,8 +117,6 @@ class TramThoatNuocSearch extends TramThoatNuoc
         'co_nguy_co_ngap',
         'do_sau_ngap_cm',
         'duong_pho',
-        'phuong_xa',
-        'quan_huyen',
         'don_vi_quan_ly',
         'ghi_chu',
               ];

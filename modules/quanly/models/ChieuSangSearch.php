@@ -112,8 +112,6 @@ class ChieuSangSearch extends ChieuSang
         'tu_dieu_khien',
         'lan_bao_duong_cuoi',
         'duong_pho',
-        'phuong_xa',
-        'quan_huyen',
         'don_vi_quan_ly',
         'ghi_chu',
                ];

@@ -109,8 +109,6 @@ class TuyenCongThoatNuocSearch extends TuyenCongThoatNuoc
         'tinh_trang',
         'diem_dau_id',
         'diem_cuoi_id',
-        'phuong_xa',
-        'quan_huyen',
         'don_vi_quan_ly',
         'ghi_chu',
               ];

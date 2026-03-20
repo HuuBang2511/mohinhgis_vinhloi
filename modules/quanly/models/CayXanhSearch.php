@@ -99,7 +99,7 @@ class CayXanhSearch extends CayXanh
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'ma_cay',
         'loai_hinh',
         'ten_cay',
@@ -116,8 +116,6 @@ class CayXanhSearch extends CayXanh
         'ghi_chu_benh',
         'vi_tri_trong',
         'duong_pho',
-        'phuong_xa',
-        'quan_huyen',
         'don_vi_quan_ly',
         'ghi_chu',
            ];

@@ -114,8 +114,6 @@ class DuongThuySearch extends DuongThuy
         'tinh_trang_bo',
         'co_ke_bo',
         'co_lan_can',
-        'phuong_xa',
-        'quan_huyen',
         'don_vi_quan_ly',
         'ghi_chu',
                ];
