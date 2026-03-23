@@ -59,6 +59,18 @@ $geojson_data = !empty($model->geojson) ? Json::encode($model->geojson) : 'null'
                 </div>
             </div>
 
+            <div class="row mt-3">
+                <div class="col-lg-3"><?= $form->field($model, 'ma_tuyen')->textInput() ?></div>
+                <div class="col-lg-6"><?= $form->field($model, 'ten_tuyen')->textInput() ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'loai_cong')->textInput() ?></div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-lg-3"><?= $form->field($model, 'chieu_dai_m')->textInput() ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'duong_kinh_mm')->textInput() ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'do_doc_phan_tram')->textInput() ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'loai_thoat_nuoc')->textInput() ?></div>
+            </div>
+
             <div class="row">
                 <div class="tab-pane" id="filedinhkem-view">
                     <div class="row px-3">

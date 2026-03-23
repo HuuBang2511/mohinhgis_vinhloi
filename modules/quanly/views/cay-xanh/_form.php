@@ -61,6 +61,22 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="block-content">
 
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'ma_cay')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'ten_cay')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'loai_hinh')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'ten_khoa_hoc')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'nam_trong')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'duong_kinh_cm')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'chieu_cao_m')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'duong_tan_m')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6"><?= $form->field($model, 'tinh_trang')->dropDownList(['Tốt' => 'Tốt', 'Cần cắt tỉa' => 'Cần cắt tỉa', 'Sâu bệnh' => 'Sâu bệnh', 'Nguy hiểm' => 'Nguy hiểm', 'Chết' => 'Chết']) ?></div>
+            <div class="col-lg-6"><?= $form->field($model, 'vi_tri_trong')->textInput() ?></div>
+        </div>
 
         <div class="row">
             <div class="tab-pane" id="filedinhkem-view">

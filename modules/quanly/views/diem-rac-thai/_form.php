@@ -60,7 +60,17 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <div class="block-content">
-
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'ma_diem')->textInput() ?></div>
+            <div class="col-lg-5"><?= $form->field($model, 'ten_diem')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'loai_hinh')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'suc_chua_m3')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'so_thung_rac')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'the_tich_thung_l')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'hay_bi_qua_tai')->checkbox() ?></div>
+        </div>
 
         <div class="row">
             <div class="tab-pane" id="filedinhkem-view">
