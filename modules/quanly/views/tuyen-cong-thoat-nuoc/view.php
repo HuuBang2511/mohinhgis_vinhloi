@@ -141,7 +141,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 map.fitBounds(bounds, { padding: [30, 30] });
                 
                 // Thêm tooltip thông tin ống
-                geoLayer.bindTooltip("Ống cái: <?= $model->coong ?> mm", { sticky: true });
+                
             } catch (e) {
                 console.error("Lỗi GeoJSON:", e);
             }

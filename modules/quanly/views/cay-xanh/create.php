@@ -9,6 +9,6 @@ use yii\helpers\Html;
 ?>
 <div class="cay-xanh-create">
     <?= $this->render('_form', [
-        'model' => $model,
+        'model' => $model,'filedinhkem' => $filedinhkem,
     ]) ?>
 </div>

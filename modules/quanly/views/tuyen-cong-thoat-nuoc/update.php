@@ -8,7 +8,7 @@ use yii\helpers\Html;
 <div class="tuyen-cong-thoat-nuoc-update">
 
     <?= $this->render('_form', [
-        'model' => $model,
+        'model' => $model,'filedinhkem' => $filedinhkem,
     ]) ?>
 
 </div>
