@@ -116,7 +116,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var center = [10.737202088, 106.915000047];
+        var center = [9.990668, 105.754463];
         var map = L.map('map').setView(center, 14);
 
         var baseMaps = {

@@ -114,8 +114,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <script type="module">
    
-    var map = L.map('map').setView([<?= ($model->lat != null) ? $model->lat : '20.473381288809428' ?>,
-        <?= ($model->long != null) ? $model->long : '106.31907196809175' ?>
+    var map = L.map('map').setView([<?= ($model->lat != null) ? $model->lat : '9.990668' ?>,
+        <?= ($model->long != null) ? $model->long : '105.754463' ?>
     ], 18);
 
 

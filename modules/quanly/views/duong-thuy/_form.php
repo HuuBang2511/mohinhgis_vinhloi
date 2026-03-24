@@ -151,7 +151,7 @@ $geojson_data = !empty($model->geojson) ? Json::encode($model->geojson) : 'null'
 // 4. Quản lý toàn bộ script bằng registerJs
 $js = <<<JS
 // --- KHỞI TẠO BẢN ĐỒ VÀ CÁC LỚP NỀN ---
-const defaultCenter = [10.737202088, 106.915000047];
+const defaultCenter = [9.990668, 105.754463];
 const map = L.map('map').setView(defaultCenter, 16);
 
 const baseLayers = {

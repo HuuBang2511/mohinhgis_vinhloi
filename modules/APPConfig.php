@@ -260,6 +260,50 @@ class APPConfig
                 'hasChild' => false,
             ],
         ],
+        'ansinh' => [
+            [
+                'name' => 'Cây xanh',
+                'icon' => 'fa fa-list',
+                'url' => 'quanly/cay-xanh',
+                'key'=>'quanly.cay-xanh.index',
+                'hasChild' => false,
+            ],
+            [
+                'name' => 'Chiếu sáng công cộng',
+                'icon' => 'fa fa-list',
+                'url' => 'quanly/chieu-sang',
+                'key'=>'quanly.chieu-sang.index',
+                'hasChild' => false,
+            ],
+            [
+                'name' => 'Trạm thoát nước',
+                'icon' => 'fa fa-list',
+                'url' => 'quanly/tram-thoat-nuoc',
+                'key'=>'quanly.tram-thoat-nuoc.index',
+                'hasChild' => false,
+            ],
+            [
+                'name' => 'Tuyến thoát nước',
+                'icon' => 'fa fa-list',
+                'url' => 'quanly/tuyen-cong-thoat-nuoc',
+                'key'=>'quanly.tuyen-cong-thoat-nuoc.index',
+                'hasChild' => false,
+            ],
+            [
+                'name' => 'Đường thủy',
+                'icon' => 'fa fa-list',
+                'url' => 'quanly/duong-thuy',
+                'key'=>'quanly.duong-thuy.index',
+                'hasChild' => false,
+            ],
+            [
+                'name' => 'Điểm rác thải',
+                'icon' => 'fa fa-list',
+                'url' => 'quanly/diem-rac-thai',
+                'key'=>'quanly.diem-rac-thai.index',
+                'hasChild' => false,
+            ],
+        ],
         'import' => [
             [
                 'name' => 'Import dữ liệu',
