@@ -86,7 +86,7 @@ class CameraAnNinhSearch extends CameraAnNinh
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'ma_camera',
         'ten_diem',
         'dia_chi',
@@ -97,11 +97,6 @@ class CameraAnNinhSearch extends CameraAnNinh
         'nguon_du_lieu',
         'lat',
         'long',
-        'geom',
-        'status',
-        'created_at',
-        'created_by',
-        'updated_at',
-        'updated_by',        ];
+               ];
     }
 }

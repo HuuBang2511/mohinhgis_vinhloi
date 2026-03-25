@@ -86,7 +86,7 @@ class MuctieuTrongdiemSearch extends MuctieuTrongdiem
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'ten',
         'loai_muctieu',
         'cap_quanly',
@@ -98,10 +98,6 @@ class MuctieuTrongdiemSearch extends MuctieuTrongdiem
         'lat',
         'long',
         'geom',
-        'status',
-        'created_at',
-        'created_by',
-        'updated_at',
-        'updated_by',        ];
+               ];
     }
 }

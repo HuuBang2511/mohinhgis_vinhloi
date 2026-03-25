@@ -80,17 +80,13 @@ class DiemTrongDiemSearch extends DiemTrongDiem
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'tenloaihinh',
         'thongtin',
         'ghichu',
         'geom',
         'lat',
         'long',
-        'status',
-        'created_at',
-        'updated_at',
-        'created_by',
-        'updated_by',        ];
+               ];
     }
 }

@@ -84,7 +84,7 @@ class CosonguycoChaynoSearch extends CosonguycoChayno
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'ten_co_so',
         'loai_hinh',
         'muc_do_nguy_co',
@@ -94,10 +94,6 @@ class CosonguycoChaynoSearch extends CosonguycoChayno
         'lat',
         'long',
         'geom',
-        'status',
-        'created_at',
-        'created_by',
-        'updated_at',
-        'updated_by',        ];
+               ];
     }
 }

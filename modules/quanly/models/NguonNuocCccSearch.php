@@ -84,7 +84,7 @@ class NguonNuocCccSearch extends NguonNuocCcc
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'ten_nguon',
         'loai_nguon',
         'dung_tich_m3',
@@ -94,10 +94,6 @@ class NguonNuocCccSearch extends NguonNuocCcc
         'lat',
         'long',
         'geom',
-        'status',
-        'created_at',
-        'created_by',
-        'updated_at',
-        'updated_by',        ];
+               ];
     }
 }

@@ -87,7 +87,7 @@ class CosokinhdoanhCodkSearch extends CosokinhdoanhCodk
             [
                 'class' => 'kartik\grid\SerialColumn',
             ],
-            'id',
+            
         'ten_co_so',
         'loai_hinh_kinh_doanh',
         'chu_so_huu',
@@ -100,10 +100,6 @@ class CosokinhdoanhCodkSearch extends CosokinhdoanhCodk
         'lat',
         'long',
         'geom',
-        'status',
-        'created_at',
-        'created_by',
-        'updated_at',
-        'updated_by',        ];
+                ];
     }
 }
