@@ -492,8 +492,8 @@ $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
 document.addEventListener('DOMContentLoaded', function () {
     const App = {
         // --- CONFIGURATION ---
-        WMS_URL: 'http://localhost:8080/geoserver/mohinhgis_vinhlong/wms',
-        GEOJSON_VUVEC_URL: 'http://localhost:8080/geoserver/mohinhgis_vinhlong/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mohinhgis_pa05%3Avu_viec&maxFeatures=5000&outputFormat=application%2Fjson',
+        WMS_URL: 'http://localhost:8080/geoserver/mohinhgis_vinhloi/wms',
+        GEOJSON_VUVEC_URL: 'http://localhost:8080/geoserver/mohinhgis_vinhloi/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=mohinhgis_vinhloi5%3Avu_viec&maxFeatures=5000&outputFormat=application%2Fjson',
         DETAIL_URLS: {
             vuViec: '<?= $vuViecDetailUrlBase ?>',
             diemNhayCam: '<?= $diemNhayCamDetailUrlBase ?>',
