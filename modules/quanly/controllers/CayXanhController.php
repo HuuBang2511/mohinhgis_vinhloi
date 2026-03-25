@@ -18,7 +18,7 @@ use app\modules\quanly\base\UploadFile;
 class CayXanhController extends \app\modules\quanly\base\QuanlyBaseController
 {
 
-    public $title = "Cây Xan";
+    public $title = "Cây xanh";
 
     /**
      * Lists all CayXanh models.
