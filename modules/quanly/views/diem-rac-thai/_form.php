@@ -63,13 +63,39 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="row mt-3">
             <div class="col-lg-3"><?= $form->field($model, 'ma_diem')->textInput() ?></div>
             <div class="col-lg-5"><?= $form->field($model, 'ten_diem')->textInput() ?></div>
-            <div class="col-lg-4"><?= $form->field($model, 'loai_hinh')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'loai_hinh')->dropDownList(['Điểm tập kết' => 'Điểm tập kết', 'Trạm trung chuyển' => 'Trạm trung chuyển', 'Bãi chứa tạm' => 'Bãi chứa tạm', 'Thùng rác công cộng' => 'Thùng rác công cộng']) ?></div>
         </div>
         <div class="row mt-3">
-            <div class="col-lg-3"><?= $form->field($model, 'suc_chua_m3')->textInput() ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'so_thung_rac')->textInput() ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'the_tich_thung_l')->textInput() ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'hay_bi_qua_tai')->checkbox() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'suc_chua_m3')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'dien_tich_m2')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'so_thung_rac')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'the_tich_thung_l')->textInput(['type' => 'number']) ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6"><?= $form->field($model, 'loai_rac_tiep_nhan')->textInput(['placeholder' => 'Rác sinh hoạt / Rác tái chế...']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'tinh_trang')->dropDownList(['Hoạt động' => 'Hoạt động', 'Quá tải' => 'Quá tải', 'Tạm đóng' => 'Tạm đóng', 'Ô nhiễm nặng' => 'Ô nhiễm nặng']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'hay_bi_qua_tai')->dropDownList([0 => 'Không', 1 => 'Có']) ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'lich_thu_gom')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'gio_thu_gom')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'don_vi_thu_gom')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'khoang_cach_dan_cu_m')->textInput(['type' => 'number']) ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-2"><?= $form->field($model, 'co_mai_che')->checkbox() ?></div>
+            <div class="col-lg-2"><?= $form->field($model, 'co_hang_rao')->checkbox() ?></div>
+            <div class="col-lg-2"><?= $form->field($model, 'co_bien_bao')->checkbox() ?></div>
+            <div class="col-lg-6"><?= $form->field($model, 'phan_anh_mui')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'phuong_xa')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'quan_huyen')->textInput() ?></div>
+            <div class="col-lg-6"><?= $form->field($model, 'dia_chi_cu_the')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6"><?= $form->field($model, 'don_vi_quan_ly')->textInput() ?></div>
+            <div class="col-lg-6"><?= $form->field($model, 'ghi_chu')->textInput() ?></div>
         </div>
 
         <div class="row">

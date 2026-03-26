@@ -69,13 +69,31 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="row mt-3">
             <div class="col-lg-3"><?= $form->field($model, 'nam_trong')->textInput(['type' => 'number']) ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'duong_kinh_cm')->textInput() ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'chieu_cao_m')->textInput() ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'duong_tan_m')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'duong_kinh_cm')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'chieu_cao_m')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'duong_tan_m')->textInput(['type' => 'number']) ?></div>
         </div>
         <div class="row mt-3">
-            <div class="col-lg-6"><?= $form->field($model, 'tinh_trang')->dropDownList(['Tốt' => 'Tốt', 'Cần cắt tỉa' => 'Cần cắt tỉa', 'Sâu bệnh' => 'Sâu bệnh', 'Nguy hiểm' => 'Nguy hiểm', 'Chết' => 'Chết']) ?></div>
-            <div class="col-lg-6"><?= $form->field($model, 'vi_tri_trong')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'ten_khu_vuc')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'dien_tich_m2')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'mat_do_phu_xanh')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-4"><?= $form->field($model, 'tinh_trang')->dropDownList(['Tốt' => 'Tốt', 'Cần cắt tỉa' => 'Cần cắt tỉa', 'Sâu bệnh' => 'Sâu bệnh', 'Nguy hiểm' => 'Nguy hiểm', 'Chết' => 'Chết']) ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'lan_cat_tinh_cuoi')->textInput(['type' => 'date']) ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'ghi_chu_benh')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6"><?= $form->field($model, 'vi_tri_trong')->dropDownList(['Vỉa hè' => 'Vỉa hè', 'Dải phân cách' => 'Dải phân cách', 'Sân trường' => 'Sân trường', 'Công viên' => 'Công viên', 'Khuôn viên cơ quan' => 'Khuôn viên cơ quan']) ?></div>
+            <div class="col-lg-6"><?= $form->field($model, 'duong_pho')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-4"><?= $form->field($model, 'phuong_xa')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'quan_huyen')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'don_vi_quan_ly')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-12"><?= $form->field($model, 'ghi_chu')->textarea(['rows' => 2]) ?></div>
         </div>
 
         <div class="row">

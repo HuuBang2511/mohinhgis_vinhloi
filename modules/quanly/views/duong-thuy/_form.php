@@ -61,14 +61,29 @@ $geojson_data = !empty($model->geojson) ? Json::encode($model->geojson) : 'null'
 
             <div class="row mt-3">
                 <div class="col-lg-3"><?= $form->field($model, 'ma_duong_thuy')->textInput() ?></div>
-                <div class="col-lg-6"><?= $form->field($model, 'ten')->textInput() ?></div>
-                <div class="col-lg-3"><?= $form->field($model, 'loai_hinh')->textInput() ?></div>
+                <div class="col-lg-5"><?= $form->field($model, 'ten')->textInput() ?></div>
+                <div class="col-lg-4"><?= $form->field($model, 'loai_hinh')->textInput() ?></div>
             </div>
             <div class="row mt-3">
-                <div class="col-lg-3"><?= $form->field($model, 'chieu_dai_m')->textInput() ?></div>
-                <div class="col-lg-3"><?= $form->field($model, 'chieu_rong_tb_m')->textInput() ?></div>
-                <div class="col-lg-3"><?= $form->field($model, 'do_sau_tb_m')->textInput() ?></div>
-                <div class="col-lg-3"><?= $form->field($model, 'tinh_trang_o_nhiem')->textInput() ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'chieu_dai_m')->textInput(['type' => 'number']) ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'dien_tich_m2')->textInput(['type' => 'number']) ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'chieu_rong_tb_m')->textInput(['type' => 'number']) ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'do_sau_tb_m')->textInput(['type' => 'number']) ?></div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-lg-4"><?= $form->field($model, 'luu_vuc')->textInput() ?></div>
+                <div class="col-lg-8"><?= $form->field($model, 'chuc_nang')->textInput(['placeholder' => 'Thoát lũ / Tưới tiêu / Giao thông thuỷ...']) ?></div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-lg-4"><?= $form->field($model, 'co_tiep_can')->textInput() ?></div>
+                <div class="col-lg-4"><?= $form->field($model, 'tinh_trang_o_nhiem')->dropDownList(['Sạch' => 'Sạch', 'Ô nhiễm nhẹ' => 'Ô nhiễm nhẹ', 'Ô nhiễm nặng' => 'Ô nhiễm nặng']) ?></div>
+                <div class="col-lg-4"><?= $form->field($model, 'tinh_trang_bo')->textInput() ?></div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-lg-2"><?= $form->field($model, 'co_ke_bo')->checkbox() ?></div>
+                <div class="col-lg-2"><?= $form->field($model, 'co_lan_can')->checkbox() ?></div>
+                <div class="col-lg-3"><?= $form->field($model, 'phuong_xa')->textInput() ?></div>
+                <div class="col-lg-5"><?= $form->field($model, 'quan_huyen')->textInput() ?></div>
             </div>
 
             <div class="row">

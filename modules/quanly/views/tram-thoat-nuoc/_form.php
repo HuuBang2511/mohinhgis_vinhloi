@@ -62,13 +62,31 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="block-content">
         <div class="row mt-3">
             <div class="col-lg-3"><?= $form->field($model, 'ma_tram')->textInput() ?></div>
-            <div class="col-lg-6"><?= $form->field($model, 'ten_tram')->textInput() ?></div>
-            <div class="col-lg-3"><?= $form->field($model, 'cong_suat_m3h')->textInput() ?></div>
+            <div class="col-lg-5"><?= $form->field($model, 'ten_tram')->textInput() ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'loai_hinh')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'cong_suat_m3h')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'duong_kinh_mm')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'do_sau_m')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'vat_lieu')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'nam_xay_dung')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-5"><?= $form->field($model, 'tinh_trang')->dropDownList(['Hoạt động tốt' => 'Hoạt động tốt', 'Tắc nghẽn' => 'Tắc nghẽn', 'Hư hỏng' => 'Hư hỏng', 'Ngập' => 'Ngập', 'Đang sửa chữa' => 'Đang sửa chữa']) ?></div>
+            <div class="col-lg-2"><?= $form->field($model, 'co_nap')->checkbox() ?></div>
+            <div class="col-lg-2"><?= $form->field($model, 'co_nguy_co_ngap')->checkbox() ?></div>
         </div>
         <div class="row mt-3">
             <div class="col-lg-4"><?= $form->field($model, 'tinh_trang_nap')->textInput() ?></div>
             <div class="col-lg-4"><?= $form->field($model, 'lan_no_vay_cuoi')->textInput(['type' => 'date']) ?></div>
-            <div class="col-lg-4"><?= $form->field($model, 'co_nguy_co_ngap')->dropDownList([0 => 'Không', 1 => 'Có']) ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'tan_suat_no_vay')->textInput() ?></div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-3"><?= $form->field($model, 'do_sau_ngap_cm')->textInput(['type' => 'number']) ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'duong_pho')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'phuong_xa')->textInput() ?></div>
+            <div class="col-lg-3"><?= $form->field($model, 'quan_huyen')->textInput() ?></div>
         </div>
 
         <div class="row">
