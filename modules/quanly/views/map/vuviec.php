@@ -1,5 +1,7 @@
 <?php
 
+use yii\helpers\Json;
+use yii\helpers\Html;
 use yii\helpers\Url;
 
 // Đăng ký các asset cần thiết.
@@ -15,6 +17,7 @@ $this->params['hideHero'] = true;
 // Tạo URL cơ sở cho tất cả các trang chi tiết
 $vuViecDetailUrlBase = Url::to(['/quanly/vu-viec/view']);
 $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
+$thematicMetaJson = Json::encode(isset($thematicMeta) ? $thematicMeta : []);
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
@@ -258,6 +261,77 @@ $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
     .report-card-title { font-weight: 600; font-size: 14px; }
     .report-card-desc  { font-size: 12px; color: var(--text-light-color); margin-top: 2px; }
 
+    .filter-box {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 14px;
+        background: var(--background-color);
+        margin-bottom: 12px;
+    }
+
+    .filter-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-light-color);
+        margin-bottom: 6px;
+    }
+
+    .filter-select {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: #fff;
+        box-sizing: border-box;
+        margin-bottom: 12px;
+    }
+
+    .filter-checklist {
+        display: grid;
+        gap: 8px;
+        max-height: 220px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        background: var(--light-gray);
+        margin-bottom: 12px;
+    }
+
+    .filter-check-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .filter-btn.primary {
+        background: var(--primary-color);
+        color: #fff;
+    }
+
+    .filter-btn.secondary {
+        background: var(--light-gray);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+    }
+
 
     @media screen and (max-width: 768px) {
         #tabs {
@@ -281,6 +355,7 @@ $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
         
         <div class="tab-buttons">
             <button class="tab-button active" data-tab="layer">Lớp dữ liệu</button>
+            <button class="tab-button" data-tab="filter">Lọc</button>
             <button class="tab-button" data-tab="info">Thông tin</button>
             <button class="tab-button" data-tab="report">Cán bộ hiện trường/người dân</button>
         </div>
@@ -444,6 +519,37 @@ $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
             <!-- KẾT THÚC CẤU TRÚC CÂY THƯ MỤC -->
         </div>
 
+        <div id="filter-content" class="tab-content">
+            <div class="section-title">Lọc lớp chuyên đề</div>
+            <div class="filter-box">
+                <label class="filter-label" for="thematic-layer-select">Chọn lớp chuyên đề</label>
+                <select id="thematic-layer-select" class="filter-select">
+                    <option value="">-- Chọn lớp --</option>
+                    <?php foreach ($thematicMeta as $key => $meta): ?>
+                        <option value="<?= Html::encode($key) ?>"><?= Html::encode($meta['title']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+
+                <label class="filter-label">Tình trạng</label>
+                <div id="status-filter-list" class="filter-checklist">
+                    <div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>
+                </div>
+
+                <label class="filter-label">Phân loại</label>
+                <div id="type-filter-list" class="filter-checklist">
+                    <div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="button" id="apply-thematic-filter" class="filter-btn primary">Áp dụng bộ lọc</button>
+                    <button type="button" id="clear-thematic-filter" class="filter-btn secondary">Xóa bộ lọc</button>
+                </div>
+            </div>
+            <p style="font-size:12px; color:var(--text-light-color); margin:0;">
+                Ví dụ: chọn lớp <strong>Cây xanh đô thị</strong>, sau đó chọn một tình trạng như <strong>Hỏng</strong> hoặc giá trị tương ứng hiện có trong dữ liệu để chỉ hiển thị các đối tượng phù hợp.
+            </p>
+        </div>
+
         <div id="info-content" class="tab-content">
             <div class="section-title">Thông tin chi tiết</div>
             <div id="feature-details"><p>Nhấn vào một đối tượng trên bản đồ để xem thông tin.</p></div>
@@ -498,6 +604,7 @@ document.addEventListener('DOMContentLoaded', function () {
             vuViec: '<?= $vuViecDetailUrlBase ?>',
             diemNhayCam: '<?= $diemNhayCamDetailUrlBase ?>',
         },
+        THEMATIC_META: <?= $thematicMetaJson ?>,
         FILES_API_URL: '<?= Yii::$app->urlManager->createUrl(["/quanly/map/get-files"]) ?>',
         MAP_CENTER: [9.990668, 105.754463],
         MAP_ZOOM: 14,
@@ -505,6 +612,9 @@ document.addEventListener('DOMContentLoaded', function () {
         map: null,
         leafletLayers: {},
         vuViecGeoJsonData: null,
+        thematicFilterState: {
+            layerKey: '',
+        },
         
         init() {
             this.UI.init();
@@ -672,6 +782,59 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
                 clusterLayer.addLayer(newGeoJsonLayer);
+            },
+
+            getThematicLayerId(layerKey) {
+                const mapping = {
+                    cayXanh: 'wmsCayXanhLayer',
+                    chieuSang: 'wmsChieuSangLayer',
+                    tramThoatNuoc: 'wmsTramThoatNuocLayer',
+                    tuyenCongThoatNuoc: 'wmsTuyenCongThoatNuocLayer',
+                    diemRacThai: 'wmsDiemRacThaiLayer'
+                };
+                return mapping[layerKey] || null;
+            },
+
+            applyThematicFilter(layerKey, statusValues, typeValues) {
+                const layerId = this.getThematicLayerId(layerKey);
+                if (!layerId || !App.leafletLayers[layerId]) return;
+
+                const meta = App.THEMATIC_META[layerKey];
+                if (!meta) return;
+
+                const clauses = [];
+                if (statusValues.length > 0) {
+                    const statusClause = statusValues
+                        .map(value => `${meta.statusField}='${String(value).replace(/'/g, "''")}'`)
+                        .join(' OR ');
+                    clauses.push(`(${statusClause})`);
+                }
+                if (typeValues.length > 0) {
+                    const typeClause = typeValues
+                        .map(value => `${meta.typeField}='${String(value).replace(/'/g, "''")}'`)
+                        .join(' OR ');
+                    clauses.push(`(${typeClause})`);
+                }
+
+                App.leafletLayers[layerId].setParams({
+                    CQL_FILTER: clauses.join(' AND ')
+                }, false);
+
+                const input = document.querySelector(`#layer-control input[data-layer-id="${layerId}"]`);
+                if (input && !input.checked) {
+                    input.checked = true;
+                    App.Layers.toggle(layerId, true);
+                } else if (App.leafletLayers[layerId] && !App.map.hasLayer(App.leafletLayers[layerId])) {
+                    App.Layers.toggle(layerId, true);
+                }
+            },
+
+            clearThematicFilter(layerKey) {
+                const layerId = this.getThematicLayerId(layerKey);
+                if (!layerId || !App.leafletLayers[layerId]) return;
+                App.leafletLayers[layerId].setParams({
+                    CQL_FILTER: ''
+                }, false);
             }
         },
         
@@ -880,6 +1043,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 a.download = 'qrcode-bandodso.png';
                 a.click();
             },
+
+            renderThematicFilterOptions(layerKey) {
+                const statusList = document.getElementById('status-filter-list');
+                const typeList = document.getElementById('type-filter-list');
+                const meta = App.THEMATIC_META[layerKey];
+
+                if (!meta) {
+                    statusList.innerHTML = '<div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>';
+                    typeList.innerHTML = '<div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>';
+                    return;
+                }
+
+                statusList.innerHTML = meta.statuses.length
+                    ? meta.statuses.map(item => `
+                        <label class="filter-check-item">
+                            <input type="checkbox" class="thematic-status-check" value="${item.value}">
+                            <span>${item.value}</span>
+                            <span style="margin-left:auto; color:var(--text-light-color);">${item.count}</span>
+                        </label>
+                    `).join('')
+                    : '<div style="font-size:12px; color:var(--text-light-color);">Không có dữ liệu tình trạng.</div>';
+
+                typeList.innerHTML = meta.types.length
+                    ? meta.types.map(item => `
+                        <label class="filter-check-item">
+                            <input type="checkbox" class="thematic-type-check" value="${item.value}">
+                            <span>${item.value}</span>
+                            <span style="margin-left:auto; color:var(--text-light-color);">${item.count}</span>
+                        </label>
+                    `).join('')
+                    : '<div style="font-size:12px; color:var(--text-light-color);">Không có dữ liệu phân loại.</div>';
+            },
         },
         
         // --- MODULE QUẢN LÝ SỰ KIỆN ---
@@ -894,6 +1089,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 document.getElementById('search-input').addEventListener('input', e => {
                     App.Layers.filterClusterLayer(e.target.value.toLowerCase());
+                });
+                document.getElementById('thematic-layer-select').addEventListener('change', e => {
+                    App.thematicFilterState.layerKey = e.target.value;
+                    App.UI.renderThematicFilterOptions(e.target.value);
+                });
+                document.getElementById('apply-thematic-filter').addEventListener('click', () => {
+                    const layerKey = document.getElementById('thematic-layer-select').value;
+                    if (!layerKey) {
+                        alert('Vui lòng chọn lớp chuyên đề cần lọc.');
+                        return;
+                    }
+
+                    const statusValues = Array.from(document.querySelectorAll('.thematic-status-check:checked')).map(el => el.value);
+                    const typeValues = Array.from(document.querySelectorAll('.thematic-type-check:checked')).map(el => el.value);
+                    App.Layers.applyThematicFilter(layerKey, statusValues, typeValues);
+                });
+                document.getElementById('clear-thematic-filter').addEventListener('click', () => {
+                    const layerKey = document.getElementById('thematic-layer-select').value;
+                    if (layerKey) {
+                        App.Layers.clearThematicFilter(layerKey);
+                    }
+                    document.querySelectorAll('.thematic-status-check, .thematic-type-check').forEach(el => {
+                        el.checked = false;
+                    });
                 });
                 document.querySelector('.tab-buttons').addEventListener('click', e => {
                     if (e.target.matches('.tab-button')) App.UI.openTab(e.target.dataset.tab);

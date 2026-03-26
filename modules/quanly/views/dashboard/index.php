@@ -1,9 +1,7 @@
 <?php
 /**
  * @var yii\web\View $this
- * @var array $summaryChartData
- * @var array $chartData
- * @var array $layerData
+ * @var array $dashboardData
  */
 
 use yii\helpers\Html;
@@ -13,10 +11,11 @@ use yii\helpers\Url;
 $this->title = 'Bảng điều hành dịch vụ đô thị';
 $this->params['breadcrumbs'][] = $this->title;
 
-$summaryChartDataJson = Json::encode($summaryChartData);
-$chartDataJson = Json::encode($chartData);
-$layerDataJson = Json::encode($layerData);
+$dashboardDataJson = Json::encode($dashboardData);
 $mapUrl = Url::to(['/quanly/map/vuviec']);
+$recordsUrl = Url::to(['/quanly/dashboard/records']);
+
+$layerMeta = isset($dashboardData['layers']) ? $dashboardData['layers'] : [];
 ?>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,887 +24,1005 @@ $mapUrl = Url::to(['/quanly/map/vuviec']);
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-    --bg-base: #0b0f1a;
-    --bg-panel: #111827;
-    --bg-card: #161d2e;
-    --bg-hover: #1e2a3d;
-    --border: rgba(255,255,255,.07);
-    --border-hi: rgba(255,255,255,.15);
-    --txt-primary: #f0f4ff;
-    --txt-muted: #8896b3;
-    --txt-dim: #4a5568;
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-red: #ef4444;
-    --accent-amber: #f59e0b;
-    --accent-green: #22c55e;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    --font-ui: 'Be Vietnam Pro', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-    --shadow-card: 0 4px 24px rgba(0,0,0,.4);
-}
-
-.ud-dash {
-    font-family: var(--font-ui);
-    background: var(--bg-base);
-    color: var(--txt-primary);
-    min-height: 100vh;
-    padding: 0 0 64px;
-    position: relative;
-    overflow-x: hidden;
-}
-
-.ud-dash::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-        radial-gradient(ellipse 80% 40% at 10% 0%, rgba(59,130,246,.12) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 30% at 90% 100%, rgba(6,182,212,.08) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.ud-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(11,15,26,.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.ud-header-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.ud-header-icon {
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.ud-header-title {
-    font-size: clamp(13px, 2vw, 16px);
-    font-weight: 700;
-    letter-spacing: .04em;
-    line-height: 1.2;
-}
-
-.ud-header-sub {
-    font-size: 11px;
-    color: var(--txt-muted);
-    font-weight: 400;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-
-.ud-header-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.btn-map {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 18px;
-    background: linear-gradient(135deg, var(--accent-blue), #2563eb);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: opacity .2s, transform .15s;
-    box-shadow: 0 4px 12px rgba(59,130,246,.35);
-}
-
-.btn-map:hover { opacity: .88; transform: translateY(-1px); }
-
-.live-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: rgba(34,197,94,.1);
-    border: 1px solid rgba(34,197,94,.25);
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-green);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-
-.live-dot {
-    width: 7px;
-    height: 7px;
-    background: var(--accent-green);
-    border-radius: 50%;
-    animation: pulse-dot 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: .4; transform: scale(.7); }
-}
-
-.ud-body {
-    position: relative;
-    z-index: 1;
-    padding: 24px 20px;
-    max-width: 1600px;
-    margin: 0 auto;
-}
-
-.ud-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--txt-muted);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.ud-section-title::before {
-    content: '';
-    width: 3px;
-    height: 14px;
-    background: var(--accent-blue);
-    border-radius: 3px;
-    display: inline-block;
-}
-
-.ud-kpi-strip {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.kpi-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 18px 16px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color .2s, transform .2s;
-}
-
-.kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--kpi-color, var(--accent-blue));
-}
-
-.kpi-card:hover {
-    border-color: var(--border-hi);
-    transform: translateY(-2px);
-}
-
-.kpi-icon {
-    font-size: 20px;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.kpi-value {
-    font-size: 28px;
-    font-weight: 800;
-    font-family: var(--font-mono);
-    color: var(--kpi-color, var(--txt-primary));
-    line-height: 1;
-    margin-bottom: 4px;
-}
-
-.kpi-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--txt-muted);
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    line-height: 1.4;
-}
-
-.kpi-sub {
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--txt-dim);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.kpi-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 7px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 700;
-    background: rgba(239,68,68,.15);
-    color: var(--accent-red);
-}
-
-.kpi-pill.green {
-    background: rgba(34,197,94,.15);
-    color: var(--accent-green);
-}
-
-.kpi-pill.amber {
-    background: rgba(245,158,11,.15);
-    color: var(--accent-amber);
-}
-
-.ud-grid-2 {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 16px;
-}
-
-.ud-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: var(--shadow-card);
-}
-
-.ud-card-head {
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-.ud-card-head-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-
-.ud-card-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    color: var(--txt-muted);
-    flex: 1;
-}
-
-.ud-card-body {
-    padding: 18px;
-    flex: 1;
-    position: relative;
-}
-
-.chart-wrap {
-    position: relative;
-    width: 100%;
-    height: 360px;
-}
-
-.chart-wrap-sm {
-    position: relative;
-    width: 100%;
-    height: 280px;
-}
-
-.donut-wrap {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.donut-center {
-    position: absolute;
-    text-align: center;
-    pointer-events: none;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    line-height: 1;
-}
-
-.donut-total {
-    font-size: 26px;
-    font-weight: 800;
-    font-family: var(--font-mono);
-}
-
-.donut-lbl {
-    font-size: 10px;
-    color: var(--txt-muted);
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    margin-top: 4px;
-}
-
-.bar-legend {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 10px 18px 14px;
-    border-top: 1px solid var(--border);
-    flex-wrap: wrap;
-}
-
-.bar-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--txt-muted);
-}
-
-.legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 2px;
-}
-
-.layer-sep {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin: 32px 0 16px;
-}
-
-.layer-sep-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: var(--layer-bg, rgba(59,130,246,.15));
-    border: 1px solid var(--layer-border, rgba(59,130,246,.3));
-    color: var(--layer-color, var(--accent-blue));
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.layer-sep-title {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: .02em;
-}
-
-.layer-sep-line {
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-}
-
-.layer-sep-count {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--txt-muted);
-    background: var(--bg-hover);
-    padding: 3px 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-}
-
-.layer-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-
-.eval-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 4px 0;
-}
-
-.eval-row {
-    display: grid;
-    grid-template-columns: 70px 1fr 42px;
-    align-items: center;
-    gap: 10px;
-}
-
-.eval-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-}
-
-.eval-bar-track {
-    background: rgba(255,255,255,.06);
-    border-radius: 4px;
-    height: 8px;
-    overflow: hidden;
-}
-
-.eval-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 1.2s cubic-bezier(.19,1,.22,1);
-}
-
-.eval-num {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    text-align: right;
-}
-
-.stat-mini-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.stat-mini-cell {
-    background: var(--bg-hover);
-    padding: 14px 12px;
-    text-align: center;
-}
-
-.stat-mini-val {
-    font-size: 22px;
-    font-weight: 800;
-    font-family: var(--font-mono);
-    line-height: 1;
-    margin-bottom: 4px;
-}
-
-.stat-mini-lbl {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--txt-muted);
-}
-
-.ud-anim {
-    opacity: 0;
-    transform: translateY(14px);
-    animation: fadeUp .45s cubic-bezier(.19,1,.22,1) forwards;
-}
-
-@keyframes fadeUp {
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.ud-anim:nth-child(1) { animation-delay: .05s; }
-.ud-anim:nth-child(2) { animation-delay: .10s; }
-.ud-anim:nth-child(3) { animation-delay: .15s; }
-.ud-anim:nth-child(4) { animation-delay: .20s; }
-.ud-anim:nth-child(5) { animation-delay: .25s; }
-.ud-anim:nth-child(6) { animation-delay: .30s; }
-
-@media (max-width: 1280px) {
-    .ud-kpi-strip { grid-template-columns: repeat(3, 1fr); }
-    .ud-grid-2 { grid-template-columns: 1fr 1fr; }
-}
-
-@media (max-width: 900px) {
-    .ud-kpi-strip { grid-template-columns: repeat(2, 1fr); }
-    .ud-grid-2 { grid-template-columns: 1fr; }
-    .layer-detail-grid { grid-template-columns: 1fr; }
-    .ud-body { padding: 16px 12px; }
-    .chart-wrap { height: 280px; }
-    .chart-wrap-sm { height: 220px; }
-}
-
-@media (max-width: 560px) {
-    .ud-kpi-strip { grid-template-columns: 1fr 1fr; }
-    .kpi-value { font-size: 22px; }
-    .ud-header { padding: 10px 14px; }
-}
+    :root {
+        --dash-bg: #09111f;
+        --dash-panel: #111c2f;
+        --dash-panel-soft: #15233b;
+        --dash-border: rgba(255, 255, 255, 0.08);
+        --dash-text: #eaf2ff;
+        --dash-muted: #95a7c4;
+        --dash-accent: #4f8cff;
+        --dash-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+        --dash-radius: 18px;
+        --dash-radius-sm: 12px;
+        --dash-font: 'Be Vietnam Pro', sans-serif;
+        --dash-mono: 'JetBrains Mono', monospace;
+    }
+
+    .urban-dashboard {
+        min-height: 100vh;
+        background:
+            radial-gradient(circle at top left, rgba(79, 140, 255, 0.14), transparent 32%),
+            radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 28%),
+            var(--dash-bg);
+        color: var(--dash-text);
+        font-family: var(--dash-font);
+        padding: 24px;
+    }
+
+    .urban-dashboard__shell {
+        max-width: 1560px;
+        margin: 0 auto;
+    }
+
+    .dash-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 24px;
+        padding: 22px 24px;
+        background: rgba(17, 28, 47, 0.82);
+        border: 1px solid var(--dash-border);
+        border-radius: var(--dash-radius);
+        box-shadow: var(--dash-shadow);
+        backdrop-filter: blur(18px);
+    }
+
+    .dash-title {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0 0 6px;
+    }
+
+    .dash-subtitle {
+        margin: 0;
+        color: var(--dash-muted);
+        font-size: 14px;
+    }
+
+    .dash-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .dash-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, 0.12);
+        color: #4ade80;
+        border: 1px solid rgba(74, 222, 128, 0.25);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .dash-chip::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 12px currentColor;
+    }
+
+    .dash-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: #fff;
+        font-weight: 700;
+        padding: 11px 18px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        box-shadow: 0 16px 34px rgba(37, 99, 235, 0.28);
+    }
+
+    .dash-grid {
+        display: grid;
+        gap: 18px;
+    }
+
+    .dash-kpis {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-bottom: 18px;
+    }
+
+    .dash-card {
+        background: rgba(17, 28, 47, 0.88);
+        border: 1px solid var(--dash-border);
+        border-radius: var(--dash-radius);
+        box-shadow: var(--dash-shadow);
+    }
+
+    .dash-kpi {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 170px;
+    }
+
+    .dash-kpi__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .dash-kpi__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--dash-mono);
+        font-weight: 700;
+        font-size: 15px;
+        color: #fff;
+    }
+
+    .dash-kpi__value {
+        font-size: 34px;
+        line-height: 1;
+        font-family: var(--dash-mono);
+        font-weight: 800;
+    }
+
+    .dash-kpi__label {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .dash-kpi__sub {
+        margin: 0;
+        color: var(--dash-muted);
+        font-size: 12px;
+    }
+
+    .dash-kpi__badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid transparent;
+        color: var(--dash-text);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--badge-color, #64748b);
+    }
+
+    .dash-main {
+        grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
+        margin-bottom: 22px;
+    }
+
+    .dash-card__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px 0;
+    }
+
+    .dash-card__title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .dash-card__hint {
+        margin: 4px 0 0;
+        color: var(--dash-muted);
+        font-size: 12px;
+    }
+
+    .dash-card__body {
+        padding: 18px 20px 20px;
+    }
+
+    .chart-box {
+        position: relative;
+        min-height: 360px;
+    }
+
+    .chart-box--sm {
+        min-height: 280px;
+    }
+
+    .donut-total {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        pointer-events: none;
+    }
+
+    .donut-total strong {
+        font-size: 34px;
+        font-family: var(--dash-mono);
+        font-weight: 800;
+    }
+
+    .donut-total span {
+        font-size: 12px;
+        color: var(--dash-muted);
+    }
+
+    .layer-block {
+        margin-bottom: 20px;
+    }
+
+    .layer-block__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 12px;
+    }
+
+    .layer-block__meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .layer-block__icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--dash-mono);
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .layer-block__title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .layer-block__count {
+        color: var(--dash-muted);
+        font-size: 13px;
+    }
+
+    .layer-block__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 18px;
+    }
+
+    .type-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .type-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        min-height: 110px;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .type-card strong {
+        display: block;
+        font-size: 28px;
+        line-height: 1;
+        font-family: var(--dash-mono);
+        margin-bottom: 8px;
+    }
+
+    .type-card span {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .type-card small {
+        display: block;
+        color: var(--dash-muted);
+        font-size: 11px;
+    }
+
+    .type-card--empty {
+        opacity: 0.7;
+    }
+
+    .dashboard-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(9, 17, 31, 0.76);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        padding: 20px;
+    }
+
+    .dashboard-modal.is-open {
+        display: flex;
+    }
+
+    .dashboard-modal__panel {
+        width: min(980px, 100%);
+        max-height: min(82vh, 920px);
+        overflow: hidden;
+        background: #f8fbff;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 20px;
+        box-shadow: 0 28px 90px rgba(0,0,0,.32);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-modal__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+    }
+
+    .dashboard-modal__title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .dashboard-modal__sub {
+        margin: 4px 0 0;
+        color: #475569;
+        font-size: 13px;
+    }
+
+    .dashboard-modal__close {
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 12px;
+        background: #e2e8f0;
+        color: #1e293b;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .dashboard-modal__body {
+        padding: 18px 20px 20px;
+        overflow: auto;
+        background: #f8fbff;
+    }
+
+    .records-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid #dbe6f3;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .records-table th,
+    .records-table td {
+        padding: 12px 10px;
+        text-align: left;
+        border-bottom: 1px solid #e7eef7;
+        font-size: 13px;
+        color: #0f172a;
+    }
+
+    .records-table th {
+        color: #475569;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        background: #eef4fb;
+    }
+
+    .records-table tr {
+        cursor: pointer;
+    }
+
+    .records-table tbody tr:hover {
+        background: #eaf3ff;
+    }
+
+    .records-table tbody tr:nth-child(even) {
+        background: #f8fbff;
+    }
+
+    .records-empty {
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1280px) {
+        .dash-kpis {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 980px) {
+        .urban-dashboard {
+            padding: 14px;
+        }
+
+        .dash-main,
+        .layer-block__grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dash-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .dash-header {
+            padding: 16px;
+        }
+
+        .dash-title {
+            font-size: 22px;
+        }
+
+        .dash-kpis,
+        .type-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="ud-dash">
-    <header class="ud-header">
-        <div class="ud-header-brand">
-            <div class="ud-header-icon">CT</div>
+<div class="urban-dashboard">
+    <div class="urban-dashboard__shell">
+        <header class="dash-header">
             <div>
-                <div class="ud-header-title">Bảng Điều Hành Dịch Vụ Đô Thị</div>
-                <div class="ud-header-sub">Phường Cái Răng · 5 lớp hạ tầng và môi trường đô thị</div>
+                <h1 class="dash-title">Bảng điều hành 5 lớp chuyên đề đô thị</h1>
+                <p class="dash-subtitle">Dashboard đã phân loại theo đúng giá trị tình trạng thực tế trong cơ sở dữ liệu, không còn gom chung theo Đỏ, Vàng, Xanh.</p>
             </div>
-        </div>
-        <div class="ud-header-actions">
-            <div class="live-badge">
-                <span class="live-dot"></span> Trực tuyến
+            <div class="dash-actions">
+                <span class="dash-chip">Dữ liệu trực tuyến</span>
+                <a class="dash-link" href="<?= Html::encode($mapUrl) ?>" target="_blank">Mở bản đồ chuyên đề</a>
             </div>
-            <a href="<?= Html::encode($mapUrl) ?>" target="_blank" class="btn-map">Xem Bản Đồ</a>
-        </div>
-    </header>
+        </header>
 
-    <main class="ud-body">
-        <div class="ud-section-title">Tổng quan 5 lớp chuyên đề</div>
-        <div class="ud-kpi-strip" id="kpiStrip">
-            <?php
-            $kpiDefs = [
-                ['icon' => 'CX', 'label' => 'Cây xanh', 'color' => '#3b82f6', 'layer' => 0],
-                ['icon' => 'CS', 'label' => 'Chiếu sáng', 'color' => '#06b6d4', 'layer' => 1],
-                ['icon' => 'TN', 'label' => 'Trạm thoát nước', 'color' => '#8b5cf6', 'layer' => 2],
-                ['icon' => 'TC', 'label' => 'Tuyến cống thoát nước', 'color' => '#14b8a6', 'layer' => 3],
-                ['icon' => 'RT', 'label' => 'Điểm tập kết rác thải', 'color' => '#f97316', 'layer' => 4],
-            ];
-            foreach ($kpiDefs as $i => $k):
-                $do = $chartData['do'][$i];
-                $vang = $chartData['vang'][$i];
-                $xanh = $chartData['xanh'][$i];
-                $total = $do + $vang + $xanh;
-            ?>
-            <div class="kpi-card ud-anim" style="--kpi-color:<?= $k['color'] ?>">
-                <span class="kpi-icon"><?= Html::encode($k['icon']) ?></span>
-                <div class="kpi-value"><?= $total ?></div>
-                <div class="kpi-label"><?= Html::encode($k['label']) ?></div>
-                <div class="kpi-sub">
-                    <?php if ($do > 0): ?><span class="kpi-pill">Đỏ <?= $do ?></span><?php endif; ?>
-                    <?php if ($vang > 0): ?><span class="kpi-pill amber">Vàng <?= $vang ?></span><?php endif; ?>
-                    <?php if ($xanh > 0): ?><span class="kpi-pill green">Xanh <?= $xanh ?></span><?php endif; ?>
-                </div>
-            </div>
+        <section class="dash-grid dash-kpis">
+            <?php foreach ($layerMeta as $layer): ?>
+                <article class="dash-card dash-kpi">
+                    <div class="dash-kpi__top">
+                        <div class="dash-kpi__icon" style="background:<?= Html::encode($layer['color']) ?>;">
+                            <?= Html::encode($layer['icon']) ?>
+                        </div>
+                        <div class="dash-kpi__value"><?= Html::encode($layer['total']) ?></div>
+                    </div>
+                    <div>
+                        <p class="dash-kpi__label"><?= Html::encode($layer['title']) ?></p>
+                        <p class="dash-kpi__sub">Tổng số đối tượng đang quản lý</p>
+                    </div>
+                            <div class="dash-kpi__badges">
+                        <?php foreach ($layer['topStatuses'] as $status): ?>
+                            <button
+                                type="button"
+                                class="status-badge"
+                                style="--badge-color:<?= Html::encode($status['color']) ?>;"
+                                data-record-trigger="1"
+                                data-layer="<?= Html::encode($layer['key']) ?>"
+                                data-status="<?= Html::encode($status['value']) ?>"
+                                data-title="<?= Html::encode($layer['title']) ?>"
+                            >
+                                <?= Html::encode($status['value']) ?>: <?= Html::encode($status['count']) ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </article>
             <?php endforeach; ?>
-        </div>
+        </section>
 
-        <div class="ud-section-title" style="margin-top:28px">Biểu đồ tổng hợp</div>
-        <div class="ud-grid-2">
-            <div class="ud-card ud-anim">
-                <div class="ud-card-head">
-                    <div class="ud-card-head-icon" style="background:rgba(59,130,246,.15);">BD</div>
-                    <span class="ud-card-title">Phân loại đánh giá theo lớp</span>
-                </div>
-                <div class="ud-card-body">
-                    <div class="chart-wrap">
-                        <canvas id="mainBarChart"></canvas>
+        <section class="dash-grid dash-main">
+            <article class="dash-card">
+                <div class="dash-card__head">
+                    <div>
+                        <h2 class="dash-card__title">Thống kê theo lớp chuyên đề và tình trạng</h2>
+                        <p class="dash-card__hint">Bấm vào từng cột trạng thái để chuyển sang bản đồ với đúng bộ lọc tương ứng.</p>
                     </div>
                 </div>
-                <div class="bar-legend">
-                    <span class="bar-legend-item"><span class="legend-dot" style="background:#ef4444"></span>Đỏ</span>
-                    <span class="bar-legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Vàng</span>
-                    <span class="bar-legend-item"><span class="legend-dot" style="background:#22c55e"></span>Xanh</span>
+                <div class="dash-card__body">
+                    <div class="chart-box">
+                        <canvas id="dashboardMainChart"></canvas>
+                    </div>
                 </div>
-            </div>
+            </article>
 
-            <div class="ud-card ud-anim">
-                <div class="ud-card-head">
-                    <div class="ud-card-head-icon" style="background:rgba(34,197,94,.12);">TH</div>
-                    <span class="ud-card-title">Tổng hợp mức độ đánh giá</span>
+            <article class="dash-card">
+                <div class="dash-card__head">
+                    <div>
+                        <h2 class="dash-card__title">Tổng số đối tượng theo từng lớp</h2>
+                        <p class="dash-card__hint">Bấm vào phần của biểu đồ để mở lớp tương ứng trên bản đồ.</p>
+                    </div>
                 </div>
-                <div class="ud-card-body">
-                    <div class="chart-wrap">
-                        <div class="donut-wrap">
-                            <canvas id="mainDonutChart"></canvas>
-                            <div class="donut-center">
-                                <div class="donut-total" id="mainDonutTotal">-</div>
-                                <div class="donut-lbl">Tổng bản ghi</div>
+                <div class="dash-card__body">
+                    <div class="chart-box">
+                        <canvas id="dashboardSummaryChart"></canvas>
+                        <div class="donut-total">
+                            <strong id="summaryTotal">0</strong>
+                            <span>Tổng đối tượng</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <?php foreach ($layerMeta as $layer): ?>
+            <section class="layer-block">
+                <div class="layer-block__head">
+                    <div class="layer-block__meta">
+                        <div class="layer-block__icon" style="background:<?= Html::encode($layer['color']) ?>;">
+                            <?= Html::encode($layer['icon']) ?>
+                        </div>
+                        <div>
+                            <h3 class="layer-block__title"><?= Html::encode($layer['title']) ?></h3>
+                            <div class="layer-block__count"><?= Html::encode($layer['total']) ?> đối tượng</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layer-block__grid">
+                    <article class="dash-card">
+                        <div class="dash-card__head">
+                            <div>
+                                <h4 class="dash-card__title">Phân loại theo <?= Html::encode(mb_strtolower($layer['typeLabel'], 'UTF-8')) ?></h4>
+                                <p class="dash-card__hint">Bấm vào từng loại để mở bộ lọc tương ứng trên bản đồ.</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        <div class="dash-card__body">
+                            <div class="type-grid">
+                                <?php if (!empty($layer['types'])): ?>
+                                    <?php foreach ($layer['types'] as $type): ?>
+                                        <button
+                                            type="button"
+                                            class="type-card"
+                                            data-record-trigger="1"
+                                            data-layer="<?= Html::encode($layer['key']) ?>"
+                                            data-type="<?= Html::encode($type['value']) ?>"
+                                            data-title="<?= Html::encode($layer['title']) ?>"
+                                        >
+                                            <strong><?= Html::encode($type['count']) ?></strong>
+                                            <span><?= Html::encode($type['value']) ?></span>
+                                            <small><?= Html::encode($layer['typeLabel']) ?></small>
+                                        </button>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="type-card type-card--empty">
+                                        <strong>0</strong>
+                                        <span>Chưa có dữ liệu phân loại</span>
+                                        <small><?= Html::encode($layer['typeLabel']) ?></small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </article>
 
-        <?php
-        $layerMeta = [
-            'cayXanh' => ['num' => '01', 'icon' => 'CX', 'color' => '#3b82f6', 'title' => 'Cây xanh đô thị'],
-            'chieuSang' => ['num' => '02', 'icon' => 'CS', 'color' => '#06b6d4', 'title' => 'Chiếu sáng công cộng'],
-            'tramThoatNuoc' => ['num' => '03', 'icon' => 'TN', 'color' => '#8b5cf6', 'title' => 'Trạm thoát nước'],
-            'tuyenCongThoatNuoc' => ['num' => '04', 'icon' => 'TC', 'color' => '#14b8a6', 'title' => 'Tuyến cống thoát nước'],
-            'diemRacThai' => ['num' => '05', 'icon' => 'RT', 'color' => '#f97316', 'title' => 'Điểm tập kết rác thải'],
-        ];
-
-        foreach ($layerMeta as $key => $meta):
-            $layer = $layerData[$key];
-            $ldo = $layer['chart']['do'];
-            $lvang = $layer['chart']['vang'];
-            $lxanh = $layer['chart']['xanh'];
-            $ltot = $ldo + $lvang + $lxanh;
-            $maxV = max($ldo, $lvang, $lxanh, 1);
-            $c = $meta['color'];
-            $rgb = sscanf(ltrim($c, '#'), '%02x%02x%02x');
-            $cBg = 'rgba(' . implode(',', $rgb) . ',.12)';
-            $cBd = 'rgba(' . implode(',', $rgb) . ',.28)';
-        ?>
-        <div class="layer-sep">
-            <div class="layer-sep-num" style="--layer-bg:<?= $cBg ?>;--layer-border:<?= $cBd ?>;--layer-color:<?= $c ?>"><?= $meta['num'] ?></div>
-            <span class="layer-sep-title"><?= Html::encode($meta['icon']) ?> <?= Html::encode($meta['title']) ?></span>
-            <div class="layer-sep-line"></div>
-            <span class="layer-sep-count"><?= $ltot ?> bản ghi</span>
-        </div>
-
-        <div class="layer-detail-grid">
-            <div class="ud-card">
-                <div class="ud-card-head">
-                    <div class="ud-card-head-icon" style="background:<?= $cBg ?>">BD</div>
-                    <span class="ud-card-title">Biểu đồ phân loại</span>
+                    <article class="dash-card">
+                        <div class="dash-card__head">
+                            <div>
+                                <h4 class="dash-card__title">Tình trạng chi tiết</h4>
+                                <p class="dash-card__hint">Bấm vào từng cột để xem trực tiếp các đối tượng trên bản đồ.</p>
+                            </div>
+                        </div>
+                        <div class="dash-card__body">
+                            <div class="chart-box chart-box--sm">
+                                <canvas id="statusChart_<?= Html::encode($layer['key']) ?>"></canvas>
+                            </div>
+                        </div>
+                    </article>
                 </div>
-                <div class="ud-card-body">
-                    <div class="chart-wrap-sm">
-                        <canvas id="bar_<?= Html::encode($key) ?>"></canvas>
-                    </div>
-                </div>
-                <div class="bar-legend">
-                    <span class="bar-legend-item"><span class="legend-dot" style="background:#ef4444"></span>Đỏ</span>
-                    <span class="bar-legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Vàng</span>
-                    <span class="bar-legend-item"><span class="legend-dot" style="background:#22c55e"></span>Xanh</span>
-                </div>
-            </div>
-
-            <div class="ud-card">
-                <div class="ud-card-head">
-                    <div class="ud-card-head-icon" style="background:<?= $cBg ?>">DG</div>
-                    <span class="ud-card-title">Mức độ đánh giá</span>
-                </div>
-                <div class="ud-card-body">
-                    <div class="eval-bars" style="margin-bottom:20px">
-                        <div class="eval-row">
-                            <span class="eval-label" style="color:#ef4444">Đỏ</span>
-                            <div class="eval-bar-track"><div class="eval-bar-fill" style="width:<?= $maxV ? round($ldo / $maxV * 100) : 0 ?>%;background:#ef4444"></div></div>
-                            <span class="eval-num" style="color:#ef4444"><?= $ldo ?></span>
-                        </div>
-                        <div class="eval-row">
-                            <span class="eval-label" style="color:#f59e0b">Vàng</span>
-                            <div class="eval-bar-track"><div class="eval-bar-fill" style="width:<?= $maxV ? round($lvang / $maxV * 100) : 0 ?>%;background:#f59e0b"></div></div>
-                            <span class="eval-num" style="color:#f59e0b"><?= $lvang ?></span>
-                        </div>
-                        <div class="eval-row">
-                            <span class="eval-label" style="color:#22c55e">Xanh</span>
-                            <div class="eval-bar-track"><div class="eval-bar-fill" style="width:<?= $maxV ? round($lxanh / $maxV * 100) : 0 ?>%;background:#22c55e"></div></div>
-                            <span class="eval-num" style="color:#22c55e"><?= $lxanh ?></span>
-                        </div>
-                    </div>
-                    <div class="stat-mini-grid">
-                        <div class="stat-mini-cell">
-                            <div class="stat-mini-val" style="color:#ef4444"><?= $ldo ?></div>
-                            <div class="stat-mini-lbl">Nghiêm trọng</div>
-                        </div>
-                        <div class="stat-mini-cell">
-                            <div class="stat-mini-val" style="color:#f59e0b"><?= $lvang ?></div>
-                            <div class="stat-mini-lbl">Cần xử lý</div>
-                        </div>
-                        <div class="stat-mini-cell">
-                            <div class="stat-mini-val" style="color:#22c55e"><?= $lxanh ?></div>
-                            <div class="stat-mini-lbl">Ổn định</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </section>
         <?php endforeach; ?>
-    </main>
+    </div>
+</div>
+
+<div id="recordsModal" class="dashboard-modal" aria-hidden="true">
+    <div class="dashboard-modal__panel">
+        <div class="dashboard-modal__head">
+            <div>
+                <h3 id="recordsModalTitle" class="dashboard-modal__title">Danh sách đối tượng</h3>
+                <p id="recordsModalSub" class="dashboard-modal__sub">Chọn một dòng để vào trang chi tiết của đối tượng.</p>
+            </div>
+            <button type="button" id="recordsModalClose" class="dashboard-modal__close" aria-label="Đóng">×</button>
+        </div>
+        <div id="recordsModalBody" class="dashboard-modal__body">
+            <p class="records-empty">Đang tải dữ liệu...</p>
+        </div>
+    </div>
 </div>
 
 <script>
-(function () {
-    const chartData = <?= $chartDataJson ?>;
-    const summaryData = <?= $summaryChartDataJson ?>;
-    const layerData = <?= $layerDataJson ?>;
+(() => {
+    const dashboardData = <?= $dashboardDataJson ?>;
+    const mapUrl = <?= Json::encode($mapUrl) ?>;
+    const recordsUrl = <?= Json::encode($recordsUrl) ?>;
+    const ctx = (id) => document.getElementById(id)?.getContext('2d');
+    const sum = (values) => values.reduce((total, value) => total + Number(value || 0), 0);
+    const recordsModal = document.getElementById('recordsModal');
+    const recordsModalTitle = document.getElementById('recordsModalTitle');
+    const recordsModalSub = document.getElementById('recordsModalSub');
+    const recordsModalBody = document.getElementById('recordsModalBody');
 
-    const RED = '#ef4444';
-    const AMBER = '#f59e0b';
-    const GREEN = '#22c55e';
+    function openModal(params) {
+        const url = new URL(recordsUrl, window.location.origin);
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+                url.searchParams.set(key, value);
+            }
+        });
 
-    const ctx = id => document.getElementById(id)?.getContext('2d');
-    const sum = arr => arr.reduce((a, b) => a + b, 0);
+        recordsModal.classList.add('is-open');
+        recordsModal.setAttribute('aria-hidden', 'false');
+        recordsModalTitle.textContent = params.modalTitle || 'Danh sách đối tượng';
+        recordsModalSub.textContent = 'Chọn một dòng để vào trang chi tiết của đối tượng.';
+        recordsModalBody.innerHTML = '<p class="records-empty">Đang tải dữ liệu...</p>';
 
-    function barOpts() {
+        fetch(url.toString())
+            .then((response) => response.json())
+            .then((payload) => {
+                const parts = [];
+                if (payload.status) {
+                    parts.push(`Tình trạng: ${payload.status}`);
+                }
+                if (payload.type) {
+                    parts.push(`Phân loại: ${payload.type}`);
+                }
+                recordsModalSub.textContent = parts.length ? parts.join(' · ') : 'Chọn một dòng để vào trang chi tiết của đối tượng.';
+
+                if (!payload.records || !payload.records.length) {
+                    recordsModalBody.innerHTML = '<p class="records-empty">Không có bản ghi phù hợp với điều kiện đã chọn.</p>';
+                    return;
+                }
+
+                recordsModalBody.innerHTML = `
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Tên</th>
+                                <th>Tình trạng</th>
+                                <th>Phân loại</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${payload.records.map((record) => `
+                                <tr data-record-url="${record.url}">
+                                    <td>${escapeHtml(record.code || '')}</td>
+                                    <td>${escapeHtml(record.name || '')}</td>
+                                    <td>${escapeHtml(record.status || '')}</td>
+                                    <td>${escapeHtml(record.type || '')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            })
+            .catch(() => {
+                recordsModalBody.innerHTML = '<p class="records-empty">Không tải được danh sách dữ liệu.</p>';
+            });
+    }
+
+    function closeModal() {
+        recordsModal.classList.remove('is-open');
+        recordsModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function buildBarOptions(onClick) {
         return {
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-                padding: {
-                    top: 22
+            interaction: {
+                mode: 'nearest',
+                intersect: true
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#95a7c4',
+                        padding: 16,
+                        boxWidth: 12,
+                        usePointStyle: true
+                    }
                 }
             },
-            plugins: { legend: { display: false } },
             scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        color: '#c8d5ea',
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: 'rgba(255,255,255,.08)'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#95a7c4',
+                        precision: 0
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,.06)'
+                    },
+                    border: {
+                        color: 'rgba(255,255,255,.08)'
+                    }
+                }
+            },
+            onClick
+        };
+    }
+
+    function buildSimpleBarOptions(onClick) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#c8d5ea',
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: 'rgba(255,255,255,.08)'
+                    }
+                },
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(255,255,255,.05)' },
-                    ticks: { color: '#8896b3', font: { size: 11 }, stepSize: 1 },
-                    border: { color: 'rgba(255,255,255,.08)' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#8896b3', font: { size: 11, weight: '600' } },
-                    border: { color: 'rgba(255,255,255,.08)' }
+                    ticks: {
+                        color: '#95a7c4',
+                        precision: 0
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,.06)'
+                    },
+                    border: {
+                        color: 'rgba(255,255,255,.08)'
+                    }
                 }
-            }
+            },
+            onClick
         };
     }
 
     const dataLabelPlugin = {
-        id: 'ud_labels',
+        id: 'dataLabelPlugin',
         afterDatasetsDraw(chart) {
             if (chart.config.type !== 'bar') {
                 return;
             }
-            const c = chart.ctx;
-            c.save();
-            c.font = 'bold 11px JetBrains Mono, monospace';
-            c.fillStyle = '#f0f4ff';
-            c.textAlign = 'center';
-            c.textBaseline = 'bottom';
-            chart.data.datasets.forEach((ds, i) => {
-                const meta = chart.getDatasetMeta(i);
-                meta.data.forEach((bar, j) => {
-                    const v = ds.data[j];
-                    if (v > 0) {
-                        c.fillText(v, bar.x, Math.max(bar.y - 2, 14));
+
+            const chartContext = chart.ctx;
+            chartContext.save();
+            chartContext.font = '700 11px JetBrains Mono, monospace';
+            chartContext.fillStyle = '#f8fbff';
+            chartContext.textAlign = 'center';
+            chartContext.textBaseline = 'bottom';
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const meta = chart.getDatasetMeta(datasetIndex);
+                meta.data.forEach((element, index) => {
+                    const value = Number(dataset.data[index] || 0);
+                    if (value > 0) {
+                        chartContext.fillText(String(value), element.x, Math.max(element.y - 4, 18));
                     }
                 });
             });
-            c.restore();
+
+            chartContext.restore();
         }
     };
 
-    function makeDonut(canvasId, totalSelector, data, colors) {
-        const c = ctx(canvasId);
-        if (!c) {
-            return;
-        }
-        const total = sum(data.data);
-        const totalEl = document.querySelector(totalSelector);
-        if (totalEl) {
-            totalEl.textContent = total.toLocaleString('vi-VN');
-        }
+    const summaryTotal = document.getElementById('summaryTotal');
+    if (summaryTotal && dashboardData.summaryChart) {
+        summaryTotal.textContent = sum(dashboardData.summaryChart.data).toLocaleString('vi-VN');
+    }
 
-        new Chart(c, {
+    const mainChartContext = ctx('dashboardMainChart');
+    if (mainChartContext && dashboardData.mainChart) {
+        new Chart(mainChartContext, {
+            type: 'bar',
+            data: {
+                labels: dashboardData.mainChart.labels,
+                datasets: dashboardData.mainChart.datasets.map((dataset) => ({
+                    ...dataset,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    barPercentage: 0.72,
+                    categoryPercentage: 0.68
+                }))
+            },
+            options: buildBarOptions((event, elements, chart) => {
+                if (!elements.length) {
+                    return;
+                }
+
+                const point = elements[0];
+                const layerKey = dashboardData.mainChart.keys[point.index];
+                const statusLabel = chart.data.datasets[point.datasetIndex].label;
+                const layer = dashboardData.layers[layerKey];
+                openModal({ layer: layerKey, status: statusLabel, modalTitle: layer ? layer.title : 'Danh sách đối tượng' });
+            }),
+            plugins: [dataLabelPlugin]
+        });
+    }
+
+    const summaryChartContext = ctx('dashboardSummaryChart');
+    if (summaryChartContext && dashboardData.summaryChart) {
+        new Chart(summaryChartContext, {
             type: 'doughnut',
             data: {
-                labels: data.labels,
+                labels: dashboardData.summaryChart.labels,
                 datasets: [{
-                    data: data.data,
-                    backgroundColor: colors,
-                    borderWidth: 0,
-                    hoverBorderWidth: 3,
-                    hoverBorderColor: '#fff'
+                    data: dashboardData.summaryChart.data,
+                    backgroundColor: dashboardData.summaryChart.colors,
+                    borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '68%',
+                cutout: '70%',
                 plugins: {
                     legend: {
-                        display: true,
                         position: 'bottom',
                         labels: {
-                            color: '#8896b3',
-                            boxWidth: 10,
-                            usePointStyle: true,
-                            padding: 14,
-                            font: { size: 11 }
+                            color: '#95a7c4',
+                            padding: 16,
+                            boxWidth: 12,
+                            usePointStyle: true
                         }
                     }
                 },
-                onHover(evt, elements) {
-                    if (!totalEl) {
+                onClick(event, elements, chart) {
+                    if (!elements.length) {
                         return;
                     }
-                    if (elements.length > 0) {
-                        totalEl.textContent = data.data[elements[0].index].toLocaleString('vi-VN');
-                    } else {
-                        totalEl.textContent = total.toLocaleString('vi-VN');
-                    }
+                    const point = elements[0];
+                    const layerKey = Object.keys(dashboardData.layers)[point.index];
+                    const layer = dashboardData.layers[layerKey];
+                    openModal({ layer: layerKey, modalTitle: layer ? layer.title : 'Danh sách đối tượng' });
                 }
             }
         });
     }
 
-    const mainBar = ctx('mainBarChart');
-    if (mainBar) {
-        new Chart(mainBar, {
-            type: 'bar',
-            data: {
-                labels: chartData.labels,
-                datasets: [
-                    { label: 'Đỏ', backgroundColor: RED, data: chartData.do, barPercentage: .75, categoryPercentage: .65, borderRadius: 4, borderSkipped: false },
-                    { label: 'Vàng', backgroundColor: AMBER, data: chartData.vang, barPercentage: .75, categoryPercentage: .65, borderRadius: 4, borderSkipped: false },
-                    { label: 'Xanh', backgroundColor: GREEN, data: chartData.xanh, barPercentage: .75, categoryPercentage: .65, borderRadius: 4, borderSkipped: false }
-                ]
-            },
-            options: barOpts(),
-            plugins: [dataLabelPlugin]
-        });
-    }
-
-    makeDonut('mainDonutChart', '#mainDonutTotal', summaryData, [RED, AMBER, GREEN]);
-
-    ['cayXanh', 'chieuSang', 'tramThoatNuoc', 'tuyenCongThoatNuoc', 'diemRacThai'].forEach((key) => {
-        const lyr = layerData[key];
-        const canvas = ctx(`bar_${key}`);
-        if (!lyr || !canvas) {
+    Object.values(dashboardData.layers || {}).forEach((layer) => {
+        const chartContext = ctx(`statusChart_${layer.key}`);
+        if (!chartContext) {
             return;
         }
 
-        new Chart(canvas, {
+        new Chart(chartContext, {
             type: 'bar',
             data: {
-                labels: ['Đỏ', 'Vàng', 'Xanh'],
+                labels: layer.statuses.map((status) => status.value),
                 datasets: [{
-                    data: [lyr.chart.do, lyr.chart.vang, lyr.chart.xanh],
-                    backgroundColor: [RED, AMBER, GREEN],
-                    barPercentage: .6,
-                    borderRadius: 5,
+                    data: layer.statuses.map((status) => status.count),
+                    backgroundColor: layer.statuses.map((status) => status.color),
+                    borderColor: layer.statuses.map((status) => status.color),
+                    borderRadius: 8,
                     borderSkipped: false
                 }]
             },
-            options: barOpts(),
+            options: buildSimpleBarOptions((event, elements, chart) => {
+                if (!elements.length) {
+                    return;
+                }
+
+                const point = elements[0];
+                const statusLabel = chart.data.labels[point.index];
+                openModal({ layer: layer.key, status: statusLabel, modalTitle: layer.title });
+            }),
             plugins: [dataLabelPlugin]
         });
+    });
+
+    document.querySelectorAll('[data-record-trigger="1"]').forEach((element) => {
+        element.addEventListener('click', () => {
+            openModal({
+                layer: element.dataset.layer,
+                status: element.dataset.status || '',
+                type: element.dataset.type || '',
+                modalTitle: element.dataset.title || 'Danh sách đối tượng'
+            });
+        });
+    });
+
+    document.getElementById('recordsModalClose').addEventListener('click', closeModal);
+    recordsModal.addEventListener('click', (event) => {
+        if (event.target === recordsModal) {
+            closeModal();
+        }
+    });
+    recordsModalBody.addEventListener('click', (event) => {
+        const row = event.target.closest('tr[data-record-url]');
+        if (!row) {
+            return;
+        }
+        window.location.href = row.dataset.recordUrl;
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && recordsModal.classList.contains('is-open')) {
+            closeModal();
+        }
     });
 })();
 </script>

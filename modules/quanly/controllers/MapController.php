@@ -3,6 +3,7 @@
 namespace app\modules\quanly\controllers;
 
 
+use app\modules\quanly\services\ThematicLayerService;
 use app\modules\quanly\models\VuViec;
 use Yii;
 use yii\db\Expression;
@@ -14,8 +15,10 @@ class MapController extends \app\modules\quanly\base\QuanlyBaseController
     public $layout = '@app/views/layouts/map/main';
 
     public function actionVuviec()
-    {   
-        return $this->render('vuviec');
+    {
+        return $this->render('vuviec', [
+            'thematicMeta' => ThematicLayerService::getFilterMeta(),
+        ]);
     }
     
 }
