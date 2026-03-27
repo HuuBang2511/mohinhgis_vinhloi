@@ -878,10 +878,11 @@ $layerMeta = isset($dashboardData['layers']) ? $dashboardData['layers'] : [];
 
             chart.data.datasets.forEach((dataset, datasetIndex) => {
                 const meta = chart.getDatasetMeta(datasetIndex);
+                const realData = dataset._realData || dataset.data;
                 meta.data.forEach((element, index) => {
-                    const value = Number(dataset.data[index] || 0);
-                    if (value > 0) {
-                        chartContext.fillText(String(value), element.x, Math.max(element.y - 4, 18));
+                    const realValue = Number(realData[index] || 0);
+                    if (realValue > 0) {
+                        chartContext.fillText(String(realValue), element.x, Math.max(element.y - 4, 18));
                     }
                 });
             });
@@ -897,29 +898,66 @@ $layerMeta = isset($dashboardData['layers']) ? $dashboardData['layers'] : [];
 
     const mainChartContext = ctx('dashboardMainChart');
     if (mainChartContext && dashboardData.mainChart) {
+        // Calculate max stacked total to determine a minimum visible threshold
+        const layerCount = dashboardData.mainChart.labels.length;
+        const layerTotals = [];
+        for (let i = 0; i < layerCount; i++) {
+            let total = 0;
+            dashboardData.mainChart.datasets.forEach(ds => { total += (ds.data[i] || 0); });
+            layerTotals.push(total);
+        }
+        const maxTotal = Math.max(...layerTotals, 1);
+        // Minimum visible value: 2.5% of maxTotal so small bars are visible on chart
+        const minVisible = Math.ceil(maxTotal * 0.025);
+
+        const processedDatasets = dashboardData.mainChart.datasets.map((dataset) => {
+            const realData = dataset.data.slice();
+            // Boost non-zero values that are too small, keep zero values at zero
+            const displayData = realData.map(v => (v > 0 && v < minVisible) ? minVisible : v);
+            return {
+                ...dataset,
+                data: displayData,
+                _realData: realData,
+                borderRadius: 0,
+                borderSkipped: false,
+                barPercentage: 0.72,
+                categoryPercentage: 0.68
+            };
+        });
+
+        // Override tooltip to show real values
+        const mainBarOptions = buildBarOptions((event, elements, chart) => {
+            if (!elements.length) {
+                return;
+            }
+
+            const point = elements[0];
+            const layerKey = dashboardData.mainChart.keys[point.index];
+            const statusLabel = chart.data.datasets[point.datasetIndex].label;
+            const layer = dashboardData.layers[layerKey];
+            openModal({ layer: layerKey, status: statusLabel, modalTitle: layer ? layer.title : 'Danh sách đối tượng' });
+        });
+
+        // Patch tooltip to show real value instead of boosted display value
+        mainBarOptions.plugins = mainBarOptions.plugins || {};
+        mainBarOptions.plugins.tooltip = {
+            callbacks: {
+                label: function(context) {
+                    const ds = context.dataset;
+                    const realData = ds._realData || ds.data;
+                    const realValue = realData[context.dataIndex] || 0;
+                    return ds.label + ': ' + realValue;
+                }
+            }
+        };
+
         new Chart(mainChartContext, {
             type: 'bar',
             data: {
                 labels: dashboardData.mainChart.labels,
-                datasets: dashboardData.mainChart.datasets.map((dataset) => ({
-                    ...dataset,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    barPercentage: 0.72,
-                    categoryPercentage: 0.68
-                }))
+                datasets: processedDatasets
             },
-            options: buildBarOptions((event, elements, chart) => {
-                if (!elements.length) {
-                    return;
-                }
-
-                const point = elements[0];
-                const layerKey = dashboardData.mainChart.keys[point.index];
-                const statusLabel = chart.data.datasets[point.datasetIndex].label;
-                const layer = dashboardData.layers[layerKey];
-                openModal({ layer: layerKey, status: statusLabel, modalTitle: layer ? layer.title : 'Danh sách đối tượng' });
-            }),
+            options: mainBarOptions,
             plugins: [dataLabelPlugin]
         });
     }
