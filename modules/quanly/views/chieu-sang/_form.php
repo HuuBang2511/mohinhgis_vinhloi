@@ -79,7 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="col-lg-4"><?= $form->field($model, 'nguon_dien')->dropDownList(['Lưới điện quốc gia' => 'Lưới điện quốc gia', 'Pin mặt trời' => 'Pin mặt trời']) ?></div>
         </div>
         <div class="row mt-3">
-            <div class="col-lg-4"><?= $form->field($model, 'lan_bao_duong_cuoi')->textInput(['type' => 'date']) ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'lan_bao_duong_cuoi')->widget(MaskedInput::class, ['clientOptions' => ['alias' =>  'date']]) ?></div>
             <div class="col-lg-4"><?= $form->field($model, 'duong_pho')->textInput() ?></div>
             <div class="col-lg-4"><?= $form->field($model, 'phuong_xa')->textInput() ?></div>
         </div>

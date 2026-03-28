@@ -79,7 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="row mt-3">
             <div class="col-lg-4"><?= $form->field($model, 'tinh_trang_nap')->textInput() ?></div>
-            <div class="col-lg-4"><?= $form->field($model, 'lan_no_vay_cuoi')->textInput(['type' => 'date']) ?></div>
+            <div class="col-lg-4"><?= $form->field($model, 'lan_no_vay_cuoi')->widget(MaskedInput::class, ['clientOptions' => ['alias' =>  'date']]) ?></div>
             <div class="col-lg-4"><?= $form->field($model, 'tan_suat_no_vay')->textInput() ?></div>
         </div>
         <div class="row mt-3">

@@ -80,7 +80,9 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="row mt-3">
             <div class="col-lg-4"><?= $form->field($model, 'tinh_trang')->dropDownList(['Tốt' => 'Tốt', 'Cần cắt tỉa' => 'Cần cắt tỉa', 'Sâu bệnh' => 'Sâu bệnh', 'Nguy hiểm' => 'Nguy hiểm', 'Chết' => 'Chết']) ?></div>
-            <div class="col-lg-4"><?= $form->field($model, 'lan_cat_tinh_cuoi')->textInput(['type' => 'date']) ?></div>
+            <div class="col-lg-4">
+                <?= $form->field($model, 'lan_cat_tinh_cuoi')->widget(MaskedInput::class, ['clientOptions' => ['alias' =>  'date']]) ?>
+            </div>
             <div class="col-lg-4"><?= $form->field($model, 'ghi_chu_benh')->textInput() ?></div>
         </div>
         <div class="row mt-3">

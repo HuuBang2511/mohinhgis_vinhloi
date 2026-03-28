@@ -75,10 +75,7 @@ $geojson_data = !empty($model->geojson) ? Json::encode($model->geojson) : 'null'
                 <div class="col-lg-5"><?= $form->field($model, 'loai_thoat_nuoc')->dropDownList(['Nước mưa' => 'Nước mưa', 'Nước thải sinh hoạt' => 'Nước thải sinh hoạt', 'Hỗn hợp' => 'Hỗn hợp']) ?></div>
                 <div class="col-lg-4"><?= $form->field($model, 'tinh_trang')->textInput() ?></div>
             </div>
-            <div class="row mt-3">
-                <div class="col-lg-6"><?= $form->field($model, 'diem_dau_id')->textInput() ?></div>
-                <div class="col-lg-6"><?= $form->field($model, 'diem_cuoi_id')->textInput() ?></div>
-            </div>
+            
             <div class="row mt-3">
                 <div class="col-lg-4"><?= $form->field($model, 'phuong_xa')->textInput() ?></div>
                 <div class="col-lg-4"><?= $form->field($model, 'quan_huyen')->textInput() ?></div>
