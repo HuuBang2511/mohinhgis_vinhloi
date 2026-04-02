@@ -61,8 +61,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             'nam_xay_dung',
                             'loai_thoat_nuoc',
                             'tinh_trang',
-                            'diem_dau_id',
-                            'diem_cuoi_id',
                             'don_vi_quan_ly',
                             'ghi_chu',
                         ],
