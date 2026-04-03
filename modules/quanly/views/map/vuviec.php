@@ -18,6 +18,7 @@ $this->params['hideHero'] = true;
 $vuViecDetailUrlBase = Url::to(['/quanly/vu-viec/view']);
 $diemNhayCamDetailUrlBase = Url::to(['/quanly/diem-nhay-cam/view']);
 $thematicMetaJson = Json::encode(isset($thematicMeta) ? $thematicMeta : []);
+$kpOptionsJson = Json::encode(isset($kpOptions) ? $kpOptions : []);
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
@@ -332,6 +333,33 @@ $thematicMetaJson = Json::encode(isset($thematicMeta) ? $thematicMeta : []);
         border: 1px solid var(--border-color);
     }
 
+    .filter-summary {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(13, 110, 253, 0.18);
+        background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(14, 165, 233, 0.04));
+    }
+
+    .filter-summary__label {
+        font-size: 12px;
+        color: var(--text-light-color);
+        margin-bottom: 4px;
+    }
+
+    .filter-summary__value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-color);
+        line-height: 1.1;
+    }
+
+    .filter-summary__meta {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--text-light-color);
+    }
+
 
     @media screen and (max-width: 768px) {
         #tabs {
@@ -530,6 +558,14 @@ $thematicMetaJson = Json::encode(isset($thematicMeta) ? $thematicMeta : []);
                     <?php endforeach; ?>
                 </select>
 
+                <label class="filter-label" for="kp-filter-select">Khu phố</label>
+                <select id="kp-filter-select" class="filter-select">
+                    <option value="">-- Tất cả khu phố --</option>
+                    <?php foreach ($kpOptions as $kp): ?>
+                        <option value="<?= (int) $kp['id'] ?>"><?= Html::encode($kp['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+
                 <label class="filter-label">Tình trạng</label>
                 <div id="status-filter-list" class="filter-checklist">
                     <div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>
@@ -543,6 +579,12 @@ $thematicMetaJson = Json::encode(isset($thematicMeta) ? $thematicMeta : []);
                 <div class="filter-actions">
                     <button type="button" id="apply-thematic-filter" class="filter-btn primary">Áp dụng bộ lọc</button>
                     <button type="button" id="clear-thematic-filter" class="filter-btn secondary">Xóa bộ lọc</button>
+                </div>
+
+                <div id="thematic-filter-summary" class="filter-summary">
+                    <div class="filter-summary__label">Tổng số đối tượng</div>
+                    <div class="filter-summary__value">0</div>
+                    <div class="filter-summary__meta">Chọn lớp chuyên đề và bấm lọc để xem số lượng trong khu phố.</div>
                 </div>
             </div>
             <p style="font-size:12px; color:var(--text-light-color); margin:0;">
@@ -605,7 +647,9 @@ document.addEventListener('DOMContentLoaded', function () {
             diemNhayCam: '<?= $diemNhayCamDetailUrlBase ?>',
         },
         THEMATIC_META: <?= $thematicMetaJson ?>,
+        KP_OPTIONS: <?= $kpOptionsJson ?>,
         FILES_API_URL: '<?= Yii::$app->urlManager->createUrl(["/quanly/map/get-files"]) ?>',
+        THEMATIC_STATS_URL: '<?= Yii::$app->urlManager->createUrl(["/quanly/map/thematic-stats"]) ?>',
         MAP_CENTER: [9.990668, 105.754463],
         MAP_ZOOM: 14,
         
@@ -614,6 +658,9 @@ document.addEventListener('DOMContentLoaded', function () {
         vuViecGeoJsonData: null,
         thematicFilterState: {
             layerKey: '',
+            kpId: '',
+            statusValues: [],
+            typeValues: [],
         },
         
         init() {
@@ -795,46 +842,149 @@ document.addEventListener('DOMContentLoaded', function () {
                 return mapping[layerKey] || null;
             },
 
-            applyThematicFilter(layerKey, statusValues, typeValues) {
-                const layerId = this.getThematicLayerId(layerKey);
-                if (!layerId || !App.leafletLayers[layerId]) return;
+            getKpOption(kpId) {
+                const numericId = parseInt(kpId, 10);
+                if (!numericId) return null;
+                return App.KP_OPTIONS.find(item => parseInt(item.id, 10) === numericId) || null;
+            },
 
+            escapeCqlValue(value) {
+                return String(value).replace(/'/g, "''");
+            },
+
+            buildThematicCqlFilter(layerKey, statusValues, typeValues, kpId) {
                 const meta = App.THEMATIC_META[layerKey];
-                if (!meta) return;
+                if (!meta) return '';
 
                 const clauses = [];
                 if (statusValues.length > 0) {
                     const statusClause = statusValues
-                        .map(value => `${meta.statusField}='${String(value).replace(/'/g, "''")}'`)
+                        .map(value => `${meta.statusField}='${this.escapeCqlValue(value)}'`)
                         .join(' OR ');
                     clauses.push(`(${statusClause})`);
                 }
                 if (typeValues.length > 0) {
                     const typeClause = typeValues
-                        .map(value => `${meta.typeField}='${String(value).replace(/'/g, "''")}'`)
+                        .map(value => `${meta.typeField}='${this.escapeCqlValue(value)}'`)
                         .join(' OR ');
                     clauses.push(`(${typeClause})`);
                 }
 
-                App.leafletLayers[layerId].setParams({
-                    CQL_FILTER: clauses.join(' AND ')
-                }, false);
+                const kpOption = this.getKpOption(kpId);
+                if (kpOption && kpOption.wkt) {
+                    clauses.push(`INTERSECTS(geom,SRID=4326;${kpOption.wkt})`);
+                }
 
-                const input = document.querySelector(`#layer-control input[data-layer-id="${layerId}"]`);
-                if (input && !input.checked) {
-                    input.checked = true;
-                    App.Layers.toggle(layerId, true);
-                } else if (App.leafletLayers[layerId] && !App.map.hasLayer(App.leafletLayers[layerId])) {
-                    App.Layers.toggle(layerId, true);
+                return clauses.join(' AND ');
+            },
+
+            showSelectedKpBoundary(kpId) {
+                let layer = App.leafletLayers.selectedKpBoundary;
+                if (!layer) {
+                    if (!App.map.getPane('selectedKpPane')) {
+                        App.map.createPane('selectedKpPane').style.zIndex = 650;
+                    }
+                    layer = App.leafletLayers.selectedKpBoundary = L.geoJSON(null, {
+                        pane: 'selectedKpPane',
+                        style: { color: '#f97316', weight: 3, opacity: 1, fillOpacity: 0.08, dashArray: '10, 6' }
+                    }).addTo(App.map);
+                }
+
+                layer.clearLayers();
+                const kpOption = this.getKpOption(kpId);
+                if (!kpOption || !kpOption.geojson) return;
+
+                layer.addData(kpOption.geojson);
+                const bounds = layer.getBounds();
+                if (bounds.isValid()) {
+                    App.map.fitBounds(bounds, { padding: [20, 20] });
                 }
             },
 
-            clearThematicFilter(layerKey) {
+            async updateThematicStats(layerKey, kpId, statusValues, typeValues) {
+                if (!layerKey) {
+                    App.UI.resetThematicSummary();
+                    return;
+                }
+
+                const params = new URLSearchParams();
+                params.set('layerKey', layerKey);
+                if (kpId) {
+                    params.set('kpId', kpId);
+                }
+                statusValues.forEach(value => params.append('statusValues[]', value));
+                typeValues.forEach(value => params.append('typeValues[]', value));
+
+                const response = await fetch(`${App.THEMATIC_STATS_URL}?${params.toString()}`);
+                const payload = await response.json();
+                if (!payload.success) {
+                    throw new Error(payload.message || 'Không thể thống kê dữ liệu theo khu phố.');
+                }
+
+                App.UI.updateThematicSummary(payload.data, kpId);
+            },
+
+            async applyThematicFilter(layerKey, statusValues, typeValues, kpId) {
                 const layerId = this.getThematicLayerId(layerKey);
                 if (!layerId || !App.leafletLayers[layerId]) return;
+
+                App.thematicFilterState = { layerKey, kpId, statusValues, typeValues };
+                App.UI.setLoading(true);
+                try {
+                    App.leafletLayers[layerId].setParams({
+                        CQL_FILTER: this.buildThematicCqlFilter(layerKey, statusValues, typeValues, kpId)
+                    }, false);
+
+                    const input = document.querySelector(`#layer-control input[data-layer-id="${layerId}"]`);
+                    if (input && !input.checked) {
+                        input.checked = true;
+                        App.Layers.toggle(layerId, true);
+                    } else if (App.leafletLayers[layerId] && !App.map.hasLayer(App.leafletLayers[layerId])) {
+                        App.Layers.toggle(layerId, true);
+                    }
+
+                    this.showSelectedKpBoundary(kpId);
+                    await this.updateThematicStats(layerKey, kpId, statusValues, typeValues);
+                } finally {
+                    App.UI.setLoading(false);
+                }
+            },
+
+            async clearThematicFilter(layerKey) {
+                const layerId = this.getThematicLayerId(layerKey);
+                if (!layerId || !App.leafletLayers[layerId]) {
+                    App.thematicFilterState = {
+                        layerKey: '',
+                        kpId: '',
+                        statusValues: [],
+                        typeValues: [],
+                    };
+                    App.UI.resetThematicSummary();
+                    return;
+                }
+
+                App.thematicFilterState = {
+                    layerKey: '',
+                    kpId: '',
+                    statusValues: [],
+                    typeValues: [],
+                };
+
                 App.leafletLayers[layerId].setParams({
                     CQL_FILTER: ''
                 }, false);
+
+                const input = document.querySelector(`#layer-control input[data-layer-id="${layerId}"]`);
+                if (input) {
+                    input.checked = false;
+                }
+                App.Layers.toggle(layerId, false);
+
+                if (App.leafletLayers.selectedKpBoundary) {
+                    App.leafletLayers.selectedKpBoundary.clearLayers();
+                }
+
+                App.UI.resetThematicSummary();
             }
         },
         
@@ -1052,6 +1202,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!meta) {
                     statusList.innerHTML = '<div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>';
                     typeList.innerHTML = '<div style="font-size:12px; color:var(--text-light-color);">Chọn lớp để hiển thị tiêu chí lọc.</div>';
+                    this.resetThematicSummary();
                     return;
                 }
 
@@ -1074,6 +1225,29 @@ document.addEventListener('DOMContentLoaded', function () {
                         </label>
                     `).join('')
                     : '<div style="font-size:12px; color:var(--text-light-color);">Không có dữ liệu phân loại.</div>';
+
+                this.resetThematicSummary(meta.title);
+            },
+
+            updateThematicSummary(data, kpId) {
+                const summary = document.getElementById('thematic-filter-summary');
+                if (!summary) return;
+
+                const kpOption = App.Layers.getKpOption(kpId);
+                summary.querySelector('.filter-summary__value').textContent = Number(data.total || 0).toLocaleString('vi-VN');
+                summary.querySelector('.filter-summary__meta').textContent = kpOption
+                    ? `${data.title} trong ${kpOption.name}`
+                    : `${data.title} trên toàn bộ khu vực hiển thị`;
+            },
+
+            resetThematicSummary(layerTitle = '') {
+                const summary = document.getElementById('thematic-filter-summary');
+                if (!summary) return;
+
+                summary.querySelector('.filter-summary__value').textContent = '0';
+                summary.querySelector('.filter-summary__meta').textContent = layerTitle
+                    ? `Chọn khu phố rồi bấm lọc để thống kê ${layerTitle.toLowerCase()}.`
+                    : 'Chọn lớp chuyên đề và bấm lọc để xem số lượng trong khu phố.';
             },
         },
         
@@ -1090,29 +1264,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('search-input').addEventListener('input', e => {
                     App.Layers.filterClusterLayer(e.target.value.toLowerCase());
                 });
-                document.getElementById('thematic-layer-select').addEventListener('change', e => {
-                    App.thematicFilterState.layerKey = e.target.value;
-                    App.UI.renderThematicFilterOptions(e.target.value);
+                document.getElementById('thematic-layer-select').addEventListener('change', async e => {
+                    const previousLayerKey = App.thematicFilterState.layerKey;
+                    const nextLayerKey = e.target.value;
+
+                    if (previousLayerKey && previousLayerKey !== nextLayerKey) {
+                        await App.Layers.clearThematicFilter(previousLayerKey);
+                    }
+
+                    App.thematicFilterState.layerKey = nextLayerKey;
+                    App.thematicFilterState.kpId = '';
+                    App.thematicFilterState.statusValues = [];
+                    App.thematicFilterState.typeValues = [];
+
+                    document.getElementById('kp-filter-select').value = '';
+                    App.UI.renderThematicFilterOptions(nextLayerKey);
                 });
-                document.getElementById('apply-thematic-filter').addEventListener('click', () => {
+                document.getElementById('kp-filter-select').addEventListener('change', e => {
+                    App.thematicFilterState.kpId = e.target.value;
+                });
+                document.getElementById('apply-thematic-filter').addEventListener('click', async () => {
                     const layerKey = document.getElementById('thematic-layer-select').value;
                     if (!layerKey) {
                         alert('Vui lòng chọn lớp chuyên đề cần lọc.');
                         return;
                     }
 
+                    const kpId = document.getElementById('kp-filter-select').value;
                     const statusValues = Array.from(document.querySelectorAll('.thematic-status-check:checked')).map(el => el.value);
                     const typeValues = Array.from(document.querySelectorAll('.thematic-type-check:checked')).map(el => el.value);
-                    App.Layers.applyThematicFilter(layerKey, statusValues, typeValues);
+                    await App.Layers.applyThematicFilter(layerKey, statusValues, typeValues, kpId);
                 });
-                document.getElementById('clear-thematic-filter').addEventListener('click', () => {
+                document.getElementById('clear-thematic-filter').addEventListener('click', async () => {
                     const layerKey = document.getElementById('thematic-layer-select').value;
                     if (layerKey) {
-                        App.Layers.clearThematicFilter(layerKey);
+                        await App.Layers.clearThematicFilter(layerKey);
                     }
+                    document.getElementById('thematic-layer-select').value = '';
+                    document.getElementById('kp-filter-select').value = '';
                     document.querySelectorAll('.thematic-status-check, .thematic-type-check').forEach(el => {
                         el.checked = false;
                     });
+                    App.UI.renderThematicFilterOptions('');
                 });
                 document.querySelector('.tab-buttons').addEventListener('click', e => {
                     if (e.target.matches('.tab-button')) App.UI.openTab(e.target.dataset.tab);

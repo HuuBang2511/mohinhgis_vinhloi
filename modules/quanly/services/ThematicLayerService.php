@@ -408,3 +408,4 @@ class ThematicLayerService
         return strtr($value, $replaceMap);
     }
 }
+
